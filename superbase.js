@@ -1,6 +1,6 @@
 // Replace with your Supabase project details
-const SUPABASE_URL = 'YOUR_SUPABASE_URL'; // Get from Supabase dashboard
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY'; // Get from Supabase dashboard
+const SUPABASE_URL = 'https://cooggqcwbgngqcaypbky.supabase.co'; // Get from Supabase dashboard
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvb2dncWN3YmduZ3FjYXlwYmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMDYwNjAsImV4cCI6MjA3MjU4MjA2MH0.aJAOPyV6JqpfjqlQvL6okQTpu9VuC7jixGNVJ1AABHg'; // Get from Supabase dashboard
 
 // Initialize Supabase (using CDN)
 const { createClient } = supabase;
