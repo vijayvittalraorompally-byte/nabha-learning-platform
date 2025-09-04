@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Learning - Nabha</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <meta name="theme-color" content="#2563eb">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 id="main-title">Digital Learning Platform</h1>
+            <div class="language-switch">
+                <button onclick="switchLanguage('en')">English</button>
+                <button onclick="switchLanguage('pa')">ਪੰਜਾਬੀ</button>
+            </div>
+        </header>
+        
+        <main>
+            <div class="hero-section">
+                <h2 id="welcome-text">Welcome to Digital Learning</h2>
+                <p id="description">Learn digital skills offline. Perfect for rural schools.</p>
+                
+                <div class="cta-buttons">
+                    <button onclick="location.href='login.html'" class="btn primary" id="login-btn">
+                        Login / Register
+                    </button>
+                    <button onclick="installPWA()" class="btn secondary" id="install-btn">
+                        Install App
+                    </button>
+                </div>
+            </div>
+            
+            <div class="features">
+                <div class="feature-card">
+                    <h3 id="offline-title">📱 Works Offline</h3>
+                    <p id="offline-desc">Access content without internet</p>
+                </div>
+                <div class="feature-card">
+                    <h3 id="local-lang-title">🌐 Local Language</h3>
+                    <p id="local-lang-desc">Content in Punjabi and English</p>
+                </div>
+                <div class="feature-card">
+                    <h3 id="progress-title">📊 Track Progress</h3>
+                    <p id="progress-desc">Monitor learning progress</p>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="js/app.js"></script>
+    <script>
+        // PWA Installation
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-btn').style.display = 'block';
+        });
+        
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt = null;
+                });
+            }
+        }
+        
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
