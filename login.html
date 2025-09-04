@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Digital Learning Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <h2 id="login-title">Login / Register</h2>
+            
+            <div class="language-switch" style="text-align: center; margin-bottom: 2rem;">
+                <button onclick="switchLanguage('en')">English</button>
+                <button onclick="switchLanguage('pa')">ਪੰਜਾਬੀ</button>
+            </div>
+            
+            <form id="authForm">
+                <div class="form-group">
+                    <label for="email" id="email-label">Email:</label>
+                    <input type="email" id="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" id="password-label">Password:</label>
+                    <input type="password" id="password" required>
+                </div>
+                
+                <div id="signupFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="name" id="name-label">Full Name:</label>
+                        <input type="text" id="name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role" id="role-label">Role:</label>
+                        <select id="role">
+                            <option value="student">Student / ਵਿਦਿਆਰਥੀ</option>
+                            <option value="teacher">Teacher / ਅਧਿਆਪਕ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="school_name" id="school-label">School Name:</label>
+                        <input type="text" id="school_name">
+                    </div>
+                    
+                    <div class="form-group" id="gradeGroup">
+                        <label for="grade_level" id="grade-label">Grade Level:</label>
+                        <select id="grade_level">
+                            <option value="">Select Grade</option>
+                            <option value="6">Class 6</option>
+                            <option value="7">Class 7</option>
+                            <option value="8">Class 8</option>
+                            <option value="9">Class 9</option>
+                            <option value="10">Class 10</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn primary" style="width: 100%;" id="submitBtn">
+                    Login
+                </button>
+                
+                <p style="text-align: center; margin-top: 1rem;">
+                    <span id="switchText">Don't have an account?</span>
+                    <a href="#" onclick="toggleMode()" id="switchLink">Sign Up</a>
+                </p>
+            </form>
+            
+            <div id="message" style="margin-top: 1rem; padding: 0.5rem; border-radius: 5px; display: none;"></div>
+        </div>
+    </div>
+    
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let isSignUp = false;
+        
+        function toggleMode() {
+            isSignUp = !isSignUp;
+            const signupFields = document.getElementById('signupFields');
+            const submitBtn = document.getElementById('submitBtn');
+            const switchText = document.getElementById('switchText');
+            const switchLink = document.getElementById('switchLink');
+            
+            if (isSignUp) {
+                signupFields.style.display = 'block';
+                submitBtn.textContent = 'Sign Up';
+                switchText.textContent = 'Already have an account?';
+                switchLink.textContent = 'Login';
+            } else {
+                signupFields.style.display = 'none';
+                submitBtn.textContent = 'Login';
+                switchText.textContent = "Don't have an account?";
+                switchLink.textContent = 'Sign Up';
+            }
+        }
+        
+        // Handle role change
+        document.getElementById('role').addEventListener('change', function() {
+            const gradeGroup = document.getElementById('gradeGroup');
+            if (this.value === 'student') {
+                gradeGroup.style.display = 'block';
+            } else {
+                gradeGroup.style.display = 'none';
+            }
+        });
+        
+        // Handle form submission
+        document.getElementById('authForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
+            
+            if (isSignUp) {
+                const userData = {
+                    name: document.getElementById('name').value,
+                    role: document.getElementById('role').value,
+                    school_name: document.getElementById('school_name').value,
+                    grade_level: document.getElementById('grade_level').value || null,
+                    language_preference: getCurrentLanguage()
+                };
+                
+                const result = await auth.signUp(email, password, userData);
+                
+                if (result.success) {
+                    showMessage('Registration successful! Please check your email.', 'success');
+                } else {
+                    showMessage(result.error, 'error');
+                }
+            } else {
+                const result = await auth.signIn(email, password);
+                
+                if (!result.success) {
+                    showMessage(result.error, 'error');
+                }
+            }
+        });
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = type;
+            messageDiv.style.display = 'block';
+            messageDiv.style.background = type === 'success' ? '#48bb78' : '#e53e3e';
+            messageDiv.style.color = 'white';
+            messageDiv.style.textAlign = 'center';
+        }
+    </script>
+</body>
+</html>
