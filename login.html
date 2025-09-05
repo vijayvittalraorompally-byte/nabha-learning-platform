@@ -161,7 +161,7 @@
                     if (error) throw error;
                     
                     if (data.user) {
-                        await supabaseClient.from('users').insert({
+                        const { error: insertError } = await supabaseClient.from('users').insert({
                             id: data.user.id,
                             email: email,
                             name: document.getElementById('name').value,
@@ -169,13 +169,14 @@
                             school_name: document.getElementById('school_name').value,
                             grade_level: document.getElementById('grade_level').value || null
                         });
+                        
+                        if (insertError) throw insertError;
+
+                        showMessage('Registration successful! Redirecting...', 'success');
+                        
+                        // New redirect logic after successful signup and data insertion
+                        await redirectToDashboard(data.user.id);
                     }
-                    
-                    showMessage('Registration successful! Redirecting to dashboard...', 'success');
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 2000);
-                    
                 } else {
                     const { data, error } = await supabaseClient.auth.signInWithPassword({
                         email: email,
@@ -184,39 +185,41 @@
                     
                     if (error) throw error;
                     
-                    // New logic to handle redirection based on user role
-                    if (data.user) {
-                        const { data: userData, error: userError } = await supabaseClient
-                            .from('users')
-                            .select('role')
-                            .eq('id', data.user.id)
-                            .single();
-
-                        if (userError) throw userError;
-
-                        if (userData && userData.role) {
-                            if (userData.role === 'student') {
-                                window.location.href = 'student_dashboard.html';
-                            } else if (userData.role === 'teacher') {
-                                window.location.href = 'teacher_dashboard.html';
-                            } else {
-                                // Default redirect if role is not student or teacher
-                                window.location.href = 'dashboard.html';
-                            }
-                        } else {
-                            // Default redirect if no role is found
-                            window.location.href = 'dashboard.html';
-                        }
-                    } else {
-                        // Fallback in case user data is missing
-                        window.location.href = 'dashboard.html';
-                    }
+                    // New redirect logic after successful login
+                    await redirectToDashboard(data.user.id);
                 }
             } catch (error) {
                 showMessage('Error: ' + error.message, 'error');
             }
         });
         
+        async function redirectToDashboard(userId) {
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('role')
+                .eq('id', userId)
+                .single();
+            
+            if (error) {
+                console.error("Error fetching user role:", error);
+                // Fallback if no role is found
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            if (data && data.role) {
+                if (data.role === 'student') {
+                    window.location.href = 'student_dashboard.html';
+                } else if (data.role === 'teacher') {
+                    window.location.href = 'teacher_dashboard.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+
         function showMessage(text, type) {
             const messageDiv = document.getElementById('message');
             messageDiv.textContent = text;
