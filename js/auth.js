@@ -1,61 +1,55 @@
-// js/auth.js - Enhanced Authentication System
-import { supabase } from './supabase.js'
+import { auth, db } from './supabase.js'
 
 class AuthManager {
   constructor() {
     this.currentUser = null
-    this.userProfile = null
+    this.currentProfile = null
     this.init()
   }
 
   async init() {
-    // Check if user is already logged in
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      this.currentUser = user
-      await this.loadUserProfile()
+    // Check for existing session
+    const { data: { session } } = await auth.getSession()
+    if (session) {
+      await this.setCurrentUser(session.user)
     }
 
     // Listen for auth changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        this.currentUser = session.user
-        await this.loadUserProfile()
+        await this.setCurrentUser(session.user)
         this.redirectToDashboard()
       } else if (event === 'SIGNED_OUT') {
         this.currentUser = null
-        this.userProfile = null
+        this.currentProfile = null
         this.redirectToLogin()
       }
     })
   }
 
-  // Sign up new user
-  async signUp(email, password, userData) {
+  async setCurrentUser(user) {
+    this.currentUser = user
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: email,
-        password: password
+      this.currentProfile = await db.getProfile(user.id)
+    } catch (error) {
+      console.error('Error fetching profile:', error)
+    }
+  }
+
+  async signUp(email, password, fullName, role = 'student') {
+    try {
+      const { data, error } = await auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: role
+          }
+        }
       })
 
       if (error) throw error
-
-      if (data.user) {
-        // Create user profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{
-            id: data.user.id,
-            email: email,
-            full_name: userData.fullName,
-            role: userData.role,
-            grade_level: userData.role === 'student' ? userData.gradeLevel : null,
-            subject_specialization: userData.role === 'teacher' ? userData.subject : null,
-            created_at: new Date().toISOString()
-          }])
-
-        if (profileError) throw profileError
-      }
 
       return { success: true, data }
     } catch (error) {
@@ -64,18 +58,14 @@ class AuthManager {
     }
   }
 
-  // Sign in user
   async signIn(email, password) {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password
+      const { data, error } = await auth.signInWithPassword({
+        email,
+        password
       })
 
       if (error) throw error
-
-      this.currentUser = data.user
-      await this.loadUserProfile()
 
       return { success: true, data }
     } catch (error) {
@@ -84,15 +74,10 @@ class AuthManager {
     }
   }
 
-  // Sign out user
   async signOut() {
     try {
-      const { error } = await supabase.auth.signOut()
+      const { error } = await auth.signOut()
       if (error) throw error
-
-      this.currentUser = null
-      this.userProfile = null
-      
       return { success: true }
     } catch (error) {
       console.error('Sign out error:', error)
@@ -100,197 +85,110 @@ class AuthManager {
     }
   }
 
-  // Load user profile
-  async loadUserProfile() {
-    if (!this.currentUser) return
-
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', this.currentUser.id)
-        .single()
-
-      if (error) throw error
-
-      this.userProfile = data
-      return { success: true, data }
-    } catch (error) {
-      console.error('Load profile error:', error)
-      return { success: false, error: error.message }
-    }
-  }
-
-  // Update user profile
   async updateProfile(updates) {
-    if (!this.currentUser) return { success: false, error: 'Not authenticated' }
+    if (!this.currentUser) {
+      throw new Error('No authenticated user')
+    }
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', this.currentUser.id)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      this.userProfile = { ...this.userProfile, ...data }
-      return { success: true, data }
+      this.currentProfile = await db.updateProfile(this.currentUser.id, updates)
+      return { success: true, profile: this.currentProfile }
     } catch (error) {
-      console.error('Update profile error:', error)
+      console.error('Profile update error:', error)
       return { success: false, error: error.message }
     }
   }
 
-  // Get current user
-  getCurrentUser() {
-    return this.currentUser
-  }
-
-  // Get user profile
-  getUserProfile() {
-    return this.userProfile
-  }
-
-  // Check if user is authenticated
   isAuthenticated() {
     return !!this.currentUser
   }
 
-  // Check if user has specific role
-  hasRole(role) {
-    return this.userProfile?.role === role
+  isTeacher() {
+    return this.currentProfile?.role === 'teacher'
   }
 
-  // Redirect to appropriate dashboard
-  redirectToDashboard() {
-    if (!this.userProfile) return
-
-    const currentPath = window.location.pathname
-    
-    // Don't redirect if already on correct dashboard
-    if (currentPath.includes('dashboard')) return
-
-    if (this.userProfile.role === 'student') {
-      window.location.href = '/student-dashboard.html'
-    } else if (this.userProfile.role === 'teacher') {
-      window.location.href = '/teacher-dashboard.html'
-    }
+  isStudent() {
+    return this.currentProfile?.role === 'student'
   }
 
-  // Redirect to login
-  redirectToLogin() {
-    const currentPath = window.location.pathname
-    if (!currentPath.includes('login') && !currentPath.includes('index')) {
-      window.location.href = '/login.html'
-    }
+  getCurrentUser() {
+    return this.currentUser
   }
 
-  // Protect route (call this on protected pages)
-  async protectRoute(requiredRole = null) {
+  getCurrentProfile() {
+    return this.currentProfile
+  }
+
+  requireAuth() {
     if (!this.isAuthenticated()) {
       this.redirectToLogin()
       return false
     }
-
-    if (requiredRole && !this.hasRole(requiredRole)) {
-      this.showAlert('Access denied. Insufficient permissions.', 'error')
-      this.redirectToDashboard()
-      return false
-    }
-
     return true
   }
 
-  // Show alert message
-  showAlert(message, type = 'info') {
-    // Create alert element
-    const alert = document.createElement('div')
-    alert.className = `alert alert-${type}`
-    alert.innerHTML = `
-      <span>${message}</span>
-      <button class="alert-close" onclick="this.parentElement.remove()">×</button>
-    `
-
-    // Add to page
-    const alertContainer = document.getElementById('alertContainer') || document.body
-    alertContainer.appendChild(alert)
-
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-      if (alert.parentElement) {
-        alert.remove()
-      }
-    }, 5000)
-  }
-
-  // Format time helper
-  formatTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '0:00'
+  requireTeacher() {
+    if (!this.requireAuth()) return false
     
-    const minutes = Math.floor(seconds / 60)
-    const secs = Math.floor(seconds % 60)
-    return `${minutes}:${secs.toString().padStart(2, '0')}`
+    if (!this.isTeacher()) {
+      alert('Access denied. Teacher role required.')
+      this.redirectToDashboard()
+      return false
+    }
+    return true
   }
 
-  // Get user statistics
-  async getUserStats() {
-    if (!this.currentUser) return null
-
-    try {
-      if (this.userProfile.role === 'student') {
-        // Get student statistics
-        const { data: videoProgress } = await supabase
-          .from('video_progress')
-          .select('*')
-          .eq('student_id', this.currentUser.id)
-
-        const { data: quizResults } = await supabase
-          .from('quiz_results')
-          .select('*')
-          .eq('student_id', this.currentUser.id)
-
-        const completedVideos = videoProgress?.filter(p => p.completed).length || 0
-        const totalWatchTime = videoProgress?.reduce((sum, p) => sum + (p.progress_seconds || 0), 0) || 0
-        const averageScore = quizResults?.length > 0 
-          ? quizResults.reduce((sum, r) => sum + r.score, 0) / quizResults.length 
-          : 0
-
-        return {
-          completedVideos,
-          totalWatchTime,
-          averageScore,
-          quizzesCompleted: quizResults?.length || 0
-        }
-      } else if (this.userProfile.role === 'teacher') {
-        // Get teacher statistics
-        const { data: videos } = await supabase
-          .from('videos')
-          .select('*')
-          .eq('teacher_id', this.currentUser.id)
-
-        const { data: quizzes } = await supabase
-          .from('quizzes')
-          .select('*')
-          .eq('teacher_id', this.currentUser.id)
-
-        const totalViews = videos?.reduce((sum, v) => sum + (v.view_count || 0), 0) || 0
-
-        return {
-          videosUploaded: videos?.length || 0,
-          quizzesCreated: quizzes?.length || 0,
-          totalViews
-        }
-      }
-    } catch (error) {
-      console.error('Error getting user stats:', error)
-      return null
+  requireStudent() {
+    if (!this.requireAuth()) return false
+    
+    if (!this.isStudent()) {
+      alert('Access denied. Student role required.')
+      this.redirectToDashboard()
+      return false
     }
+    return true
+  }
+
+  redirectToLogin() {
+    if (!window.location.pathname.includes('login.html') && 
+        !window.location.pathname.includes('index.html')) {
+      window.location.href = 'login.html'
+    }
+  }
+
+  redirectToDashboard() {
+    if (this.isTeacher()) {
+      window.location.href = 'teacher-dashboard.html'
+    } else if (this.isStudent()) {
+      window.location.href = 'student-dashboard.html'
+    } else {
+      window.location.href = 'dashboard.html'
+    }
+  }
+
+  // Utility method to get user initials for avatar
+  getUserInitials() {
+    if (!this.currentProfile?.full_name) {
+      return this.currentUser?.email?.charAt(0).toUpperCase() || 'U'
+    }
+    
+    const names = this.currentProfile.full_name.split(' ')
+    return names.length >= 2 
+      ? (names[0].charAt(0) + names[1].charAt(0)).toUpperCase()
+      : names[0].charAt(0).toUpperCase()
+  }
+
+  // Format user display name
+  getDisplayName() {
+    return this.currentProfile?.full_name || 
+           this.currentUser?.email || 
+           'User'
   }
 }
 
-// Create global auth instance
-const auth = new AuthManager()
+// Create global auth manager instance
+const authManager = new AuthManager()
 
-export default auth
+// Export both the class and instance for flexibility
+export { AuthManager }
+export default authManager
