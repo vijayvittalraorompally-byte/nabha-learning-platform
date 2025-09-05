@@ -1,63 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Digital Learning</title>
-  <link rel="stylesheet" href="css/style.css">
-  <meta name="theme-color" content="#2563eb">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Digital Learning Platform</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1 id="dashboard-title">📚 Digital Learning Dashboard</h1>
-      <button id="logout-btn" class="btn secondary">Logout</button>
-    </header>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading"></div>
+        <p>Loading Dashboard...</p>
+    </div>
 
-    <main>
-      <!-- User info -->
-      <section class="user-info">
-        <h2>Welcome, <span id="user-name">Loading...</span></h2>
-        <p><strong>Role:</strong> <span id="user-role">-</span></p>
-        <p><strong>School:</strong> <span id="user-school">-</span></p>
-        <p><strong>Grade:</strong> <span id="user-grade">-</span></p>
-      </section>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/real-time.js"></script>
+    <script>
+        // Dashboard router based on user role
+        async function initializeDashboard() {
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-      <!-- Dashboard actions -->
-      <section class="dashboard-actions">
-        <h2>Quick Actions</h2>
-        <div class="actions-grid">
-          <button class="btn primary" onclick="location.href='course.html'">📖 View Courses</button>
-          <button class="btn primary" onclick="alert('Progress tracking coming soon!')">📊 Track Progress</button>
-          <button class="btn primary" onclick="alert('Offline downloads coming soon!')">⬇ Offline Content</button>
-        </div>
-      </section>
-    </main>
-  </div>
+                // Get user profile
+                const { data: profile } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
 
-  <script src="js/supabase.js"></script>
-  <script src="js/auth.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      const profile = await auth.getUserProfile();
+                if (!profile) {
+                    window.location.href = 'login.html';
+                    return;
+                }
 
-      if (!profile) {
-        // Not logged in, redirect to login
-        window.location.href = "login.html";
-        return;
-      }
+                // Update user online status
+                await supabaseClient
+                    .from('users')
+                    .update({ 
+                        is_online: true, 
+                        last_active: new Date().toISOString() 
+                    })
+                    .eq('id', user.id);
 
-      // Show profile info
-      document.getElementById("user-name").innerText = profile.name || "User";
-      document.getElementById("user-role").innerText = profile.role || "-";
-      document.getElementById("user-school").innerText = profile.school_name || "-";
-      document.getElementById("user-grade").innerText = profile.grade_level || "-";
+                // Redirect based on role
+                if (profile.role === 'student') {
+                    window.location.href = 'student-dashboard.html';
+                } else if (profile.role === 'teacher') {
+                    window.location.href = 'teacher-dashboard.html';
+                } else {
+                    window.location.href = 'teacher-dashboard.html'; // Default to teacher
+                }
+            } catch (error) {
+                console.error('Dashboard initialization error:', error);
+                window.location.href = 'login.html';
+            }
+        }
 
-      // Logout button
-      document.getElementById("logout-btn").addEventListener("click", () => {
-        auth.signOut();
-      });
-    });
-  </script>
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
 </body>
 </html>
