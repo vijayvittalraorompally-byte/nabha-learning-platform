@@ -171,7 +171,7 @@
                         });
                     }
                     
-                    showMessage('Registration successful!', 'success');
+                    showMessage('Registration successful! Redirecting to dashboard...', 'success');
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 2000);
@@ -184,7 +184,33 @@
                     
                     if (error) throw error;
                     
-                    window.location.href = 'dashboard.html';
+                    // New logic to handle redirection based on user role
+                    if (data.user) {
+                        const { data: userData, error: userError } = await supabaseClient
+                            .from('users')
+                            .select('role')
+                            .eq('id', data.user.id)
+                            .single();
+
+                        if (userError) throw userError;
+
+                        if (userData && userData.role) {
+                            if (userData.role === 'student') {
+                                window.location.href = 'student_dashboard.html';
+                            } else if (userData.role === 'teacher') {
+                                window.location.href = 'teacher_dashboard.html';
+                            } else {
+                                // Default redirect if role is not student or teacher
+                                window.location.href = 'dashboard.html';
+                            }
+                        } else {
+                            // Default redirect if no role is found
+                            window.location.href = 'dashboard.html';
+                        }
+                    } else {
+                        // Fallback in case user data is missing
+                        window.location.href = 'dashboard.html';
+                    }
                 }
             } catch (error) {
                 showMessage('Error: ' + error.message, 'error');
