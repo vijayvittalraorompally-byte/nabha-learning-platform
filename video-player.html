@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player - Nabha Learning Platform</title>
+    <meta name="theme-color" content="#667eea">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .video-player-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #1a202c;
+            min-height: 100vh;
+        }
+        
+        .video-header {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .back-button:hover {
+            color: #5a6fcf;
+        }
+        
+        .video-title {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            font-size: 1.8rem;
+        }
+        
+        .video-meta {
+            display: flex;
+            gap: 2rem;
+            color: #718096;
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+        }
+        
+        .video-player-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .video-player {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border: none;
+            display: block;
+        }
+        
+        .video-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            padding: 1rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .video-player-wrapper:hover .video-controls {
+            transform: translateY(0);
+        }
+        
+        .progress-container {
+            margin-bottom: 1rem;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            border-radius: 3px;
+            transition: width 0.1s ease;
+        }
+        
+        .progress-time {
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        
+        .control-buttons {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        
+        .video-info-panel {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .video-description {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .video-stats {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .description-text {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+        
+        .video-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        .stat-value {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        .progress-tracker {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-title {
+            color: #2d3748;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .progress-percentage {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .progress-bar-large {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-fill-large {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        .notes-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .notes-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .notes-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .notes-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .save-notes-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: background 0.3s ease;
+        }
+        
+        .save-notes-btn:hover {
+            background: #5a6fcf;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+        
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .video-player-container {
+                padding: 1rem;
+            }
+            
+            .video-player {
+                height: 250px;
+            }
+            
+            .video-info-panel {
+                grid-template-columns: 1fr;
+            }
+            
+            .video-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="video-player-container">
+        <!-- Video Header -->
+        <div class="video-header">
+            <a href="student-dashboard.html" class="back-button">
+                ← Back to Dashboard
+            </a>
+            <h1 class="video-title" id="videoTitle">Loading...</h1>
+            <div class="video-meta" id="videoMeta">
+                <!-- Video metadata will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- Video Player -->
+        <div class="video-player-wrapper">
+            <div class="loading-overlay" id="loadingOverlay">
+                <div>Loading video...</div>
+            </div>
+            
+            <!-- Video iframe for YouTube/external videos -->
+            <iframe id="videoPlayer" class="video-player" frameborder="0" allowfullscreen></iframe>
+            
+            <!-- Custom controls overlay -->
+            <div class="video-controls" id="videoControls" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-time">
+                        <span id="currentTime">0:00</span>
+                        <span id="totalTime">0:00</span>
+                    </div>
+                </div>
+                
+                <div class="control-buttons">
+                    <button class="control-btn" id="playPauseBtn">▶</button>
+                    <button class="control-btn" id="muteBtn">🔊</button>
+                    <div class="volume-container">
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+                    </div>
+                    <button class="control-btn" id="fullscreenBtn">⛶</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress Tracker -->
+        <div class="progress-tracker">
+            <div class="progress-header">
+                <div class="progress-title">Watch Progress</div>
+                <div class="progress-percentage" id="watchProgress">0%</div>
+            </div>
+            <div class="progress-bar-large">
+                <div class="progress-fill-large" id="watchProgressFill" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">Keep watching to track your progress</div>
+        </div>
+        
+        <!-- Video Info Panel -->
+        <div class="video-info-panel">
+            <div class="video-description">
+                <h3 style="color: #2d3748; margin-bottom: 1rem;">Description</h3>
+                <div class="description-text" id="videoDescription">
+                    Loading description...
+                </div>
+                <div class="video-tags" id="videoTags">
+                    <!-- Tags will be loaded here -->
+                </div>
+            </div>
+            
+            <div class="video-stats">
+                <h3 style="color: #2d3748; margin-bottom: 1rem;">Video Stats</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">Duration</span>
+                        <span class="stat-value" id="videoDuration">--:--</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Views</span>
+                        <span class="stat-value" id="videoViews">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Course</span>
+                        <span class="stat-value" id="videoCourse">General</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Teacher</span>
+                        <span class="stat-value" id="videoTeacher">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notes Section -->
+        <div class="notes-section">
+            <div class="notes-header">
+                <h3 style="color: #2d3748;">My Notes</h3>
+            </div>
+            <textarea 
+                class="notes-input" 
+                id="videoNotes" 
+                placeholder="Take notes while watching the video...">
+            </textarea>
+            <button class="save-notes-btn" onclick="saveNotes()">
+                Save Notes
+            </button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        class VideoPlayer {
+            constructor() {
+                this.videoId = null;
+                this.currentUser = null;
+                this.watchStartTime = null;
+                this.totalWatchTime = 0;
+                this.progressUpdateInterval = null;
+                this.currentProgress = 0;
+                this.videoDuration = 0;
+                this.init();
+            }
+
+            async init() {
+                try {
+                    // Check authentication
+                    const { data: { user } } = await supabaseClient.auth.getUser();
+                    if (!user) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    
+                    this.currentUser = user;
+                    
+                    // Get video ID from URL parameters
+                    const urlParams = new URLSearchParams(window.location.search);
+                    this.videoId = urlParams.get('id');
+                    
+                    if (!this.videoId) {
+                        this.showError('Video ID not found');
+                        return;
+                    }
+                    
+                    await this.loadVideo();
+                    this.setupEventListeners();
+                    
+                } catch (error) {
+                    console.error('Video player initialization failed:', error);
+                    this.showError('Failed to initialize video player');
+                }
+            }
+
+            async loadVideo() {
+                try {
+                    // Load video details
+                    const { data
