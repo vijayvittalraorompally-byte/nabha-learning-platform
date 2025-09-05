@@ -1,18 +1,27 @@
 /
-├── index.html (Home page)
-├── login.html (Login page - no changes needed)
-├── dashboard.html (Generic dashboard - keep as fallback)
-├── student_dashboard.html (NEW - Student interface)
-├── teacher_dashboard.html (NEW - Teacher interface)
-├── course.html (Course content)
-├── manifest.json (PWA manifest)
-├── sw.js (Service worker)
+├── index.html
+├── login.html
+├── dashboard.html (Updated)
+├── student-dashboard.html (New)
+├── teacher-dashboard.html (New)
+├── video-player.html (New)
+├── quiz.html (New)
+├── upload-video.html (New)
+├── create-quiz.html (New)
+├── analytics.html (New)
+├── manifest.json
+├── sw.js (Updated)
 ├── /css
-│   └── style.css
+│   ├── style.css (Updated)
+│   └── dashboard.css (New)
 ├── /js
-│   ├── app.js
-│   ├── auth.js (UPDATED - with role-based redirection)
-│   └── supabase.js
+│   ├── app.js (Updated)
+│   ├── auth.js (Updated)
+│   ├── supabase.js
+│   ├── dashboard.js (New)
+│   ├── video-handler.js (New)
+│   ├── quiz-handler.js (New)
+│   └── real-time.js (New)
 └── /icons
     ├── icon-192.png
     └── icon-512.png
