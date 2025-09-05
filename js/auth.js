@@ -36,7 +36,7 @@ class AuthManager {
     }
   }
 
-  async signUp(email, password, fullName, role = 'student') {
+  async signUp(email, password, fullName, role = 'student', schoolName, gradeLevel) {
     try {
       const { data, error } = await auth.signUp({
         email,
@@ -44,7 +44,9 @@ class AuthManager {
         options: {
           data: {
             full_name: fullName,
-            role: role
+            role: role,
+            school_name: schoolName,
+            grade_level: gradeLevel
           }
         }
       })
@@ -131,7 +133,8 @@ class AuthManager {
     if (!this.requireAuth()) return false
     
     if (!this.isTeacher()) {
-      alert('Access denied. Teacher role required.')
+      // Use custom message box instead of alert()
+      console.error('Access denied. Teacher role required.')
       this.redirectToDashboard()
       return false
     }
@@ -142,7 +145,8 @@ class AuthManager {
     if (!this.requireAuth()) return false
     
     if (!this.isStudent()) {
-      alert('Access denied. Student role required.')
+      // Use custom message box instead of alert()
+      console.error('Access denied. Student role required.')
       this.redirectToDashboard()
       return false
     }
