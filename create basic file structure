@@ -1,7 +1,9 @@
 /
 ├── index.html (Home page)
-├── login.html (Login page)
-├── dashboard.html (Student/Teacher dashboard)
+├── login.html (Login page - no changes needed)
+├── dashboard.html (Generic dashboard - keep as fallback)
+├── student_dashboard.html (NEW - Student interface)
+├── teacher_dashboard.html (NEW - Teacher interface)
 ├── course.html (Course content)
 ├── manifest.json (PWA manifest)
 ├── sw.js (Service worker)
@@ -9,7 +11,7 @@
 │   └── style.css
 ├── /js
 │   ├── app.js
-│   ├── auth.js
+│   ├── auth.js (UPDATED - with role-based redirection)
 │   └── supabase.js
 └── /icons
     ├── icon-192.png
