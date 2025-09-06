@@ -1,145 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Nabha Learning Platform</title>
-  <meta name="description" content="Digital Learning Platform for Students and Teachers"/>
-  <meta name="theme-color" content="#667eea"/>
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json"/>
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
-  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
-
-  <link rel="stylesheet" href="css/style.css"/>
   <style>
-    .hero {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 2rem;
-    }
-    .hero-content { max-width: 800px; }
-    .hero h1 { font-size: 3rem; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
-    .hero p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; }
-    .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .cta-btn {
-      padding: 1rem 2rem; font-size: 1.1rem; border: none; border-radius: 50px;
-      text-decoration: none; transition: all 0.3s ease; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 0.5rem;
-    }
-    .cta-btn.primary { background: white; color: #667eea; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-    .cta-btn.secondary { background: transparent; color: white; border: 2px solid white; }
-    .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
-    .features { padding: 4rem 2rem; background: #f8fafc; }
-    .features-container { max-width: 1200px; margin: 0 auto; }
-    .features h2 { text-align: center; color: #2d3748; font-size: 2.5rem; margin-bottom: 3rem; }
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
-    .feature-card { background: white; padding: 2rem; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
-    .feature-card:hover { transform: translateY(-5px); }
-    .feature-icon { font-size: 3rem; margin-bottom: 1rem; }
-    .feature-card h3 { color: #2d3748; margin-bottom: 1rem; }
-    .feature-card p { color: #718096; line-height: 1.6; }
-    .stats { padding: 4rem 2rem; background: #2d3748; color: white; }
-    .stats-container { max-width: 800px; margin: 0 auto; text-align: center; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 2rem; }
-    .stat-number { font-size: 3rem; font-weight: bold; color: #667eea; display: block; }
-    .stat-label { font-size: 1.1rem; margin-top: 0.5rem; }
-    .footer { background: #1a202c; color: #a0aec0; padding: 2rem; text-align: center; }
+    body{font-family:Arial, sans-serif;margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+    .box{text-align:center}
+    .btn{padding:1rem 1.5rem;border-radius:8px;background:#fff;color:#667eea;border:none;cursor:pointer}
   </style>
 </head>
 <body>
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="hero-content">
-      <h1>🎓 Nabha Learning Platform</h1>
-      <p>Empowering education through technology. Interactive learning for students and comprehensive teaching tools for educators.</p>
-      <div class="cta-buttons">
-        <a href="login.html" class="cta-btn primary">🚀 Get Started</a>
-        <a href="#features" class="cta-btn secondary">📚 Learn More</a>
-        <!-- Install Button (hidden until eligible) -->
-        <button id="installBtn" class="cta-btn primary" style="display: none;">📲 Install App</button>
-      </div>
+  <div class="box">
+    <h1>🎓 Nabha Learning</h1>
+    <p>Interactive learning for teachers and students.</p>
+    <div style="margin-top:1rem">
+      <a href="login.html"><button class="btn">Login / Sign up</button></a>
     </div>
-  </section>
-
-  <!-- Features Section -->
-  <section class="features" id="features">
-    <div class="features-container">
-      <h2>Why Choose Our Platform?</h2>
-      <div class="features-grid">
-        <div class="feature-card"><div class="feature-icon">🎥</div><h3>Interactive Videos</h3><p>Engaging educational videos with progress tracking and interactive elements.</p></div>
-        <div class="feature-card"><div class="feature-icon">📝</div><h3>Smart Quizzes</h3><p>Create and take quizzes with instant feedback and detailed analytics.</p></div>
-        <div class="feature-card"><div class="feature-icon">📊</div><h3>Real-time Analytics</h3><p>Track student progress and performance analytics in real time.</p></div>
-        <div class="feature-card"><div class="feature-icon">👥</div><h3>Collaborative Learning</h3><p>Seamless learning environment with live interaction features.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Stats Section -->
-  <section class="stats">
-    <div class="stats-container">
-      <h2>Platform Statistics</h2>
-      <div class="stats-grid">
-        <div><span class="stat-number">500+</span><div class="stat-label">Active Students</div></div>
-        <div><span class="stat-number">50+</span><div class="stat-label">Expert Teachers</div></div>
-        <div><span class="stat-number">1000+</span><div class="stat-label">Educational Videos</div></div>
-        <div><span class="stat-number">200+</span><div class="stat-label">Interactive Quizzes</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <p>&copy; 2024 Nabha Learning Platform. Built with ❤ for education.</p>
-    <p>Powered by modern web technologies and hosted on GitHub Pages.</p>
-  </footer>
-
-  <!-- Scripts -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="js/supabase.js"></script>
-  <script>
-    // Redirect logged-in users to dashboard
-    window.addEventListener("load", async () => {
-      try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user) {
-          window.location.href = "dashboard.html"; // router decides student/teacher
-        }
-      } catch (err) {
-        console.log("Not authenticated");
-      }
-    });
-
-    // PWA Install Button
-    let deferredPrompt;
-    const installBtn = document.getElementById("installBtn");
-
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.style.display = "inline-flex"; // show button
-    });
-
-    installBtn.addEventListener("click", async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log("User choice:", outcome);
-      deferredPrompt = null;
-      installBtn.style.display = "none";
-    });
-
-    window.addEventListener("appinstalled", () => {
-      console.log("PWA was installed");
-      installBtn.style.display = "none";
-    });
-  </script>
+  </div>
 </body>
 </html>
