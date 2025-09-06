@@ -1,6 +1,4 @@
-// js/quiz-handler.js
-// Quiz handling functionality
-
+// quiz-handler.js
 class QuizHandler {
   constructor() {
     this.currentQuiz = null
@@ -8,25 +6,33 @@ class QuizHandler {
     this.answers = {}
     this.timeRemaining = 0
     this.timerInterval = null
+
     this.init()
   }
 
   init() {
     this.setupQuizModal()
+    this.setupLangSync()
+  }
+
+  setupLangSync() {
+    const langSel = document.getElementById("globalLang")
+    if (langSel) {
+      langSel.addEventListener("change", () => {
+        if (this.currentQuiz) this.renderQuiz()
+      })
+    }
   }
 
   setupQuizModal() {
-    // Create quiz modal if it doesn't exist
-    if (!document.getElementById('quizModal')) {
-      const modal = document.createElement('div')
-      modal.id = 'quizModal'
-      modal.className = 'modal quiz-modal'
+    if (!document.getElementById("quizModal")) {
+      const modal = document.createElement("div")
+      modal.id = "quizModal"
+      modal.className = "modal quiz-modal"
       modal.innerHTML = `
         <div class="modal-content">
           <span class="close" onclick="quizHandler.closeQuiz()">&times;</span>
-          <div id="quizContainer">
-            <!-- Quiz content will be loaded here -->
-          </div>
+          <div id="quizContainer"></div>
         </div>
       `
       document.body.appendChild(modal)
@@ -35,21 +41,19 @@ class QuizHandler {
 
   async startQuiz(quizId) {
     try {
-      // Load quiz details
       const { data: quiz, error: quizError } = await supabaseClient
-        .from('quizzes')
-        .select('*')
-        .eq('id', quizId)
+        .from("quizzes")
+        .select("*")
+        .eq("id", quizId)
         .single()
 
       if (quizError) throw quizError
 
-      // Load quiz questions
       const { data: questions, error: questionsError } = await supabaseClient
-        .from('quiz_questions')
-        .select('*')
-        .eq('quiz_id', quizId)
-        .order('order_index', { ascending: true })
+        .from("quiz_questions")
+        .select("*")
+        .eq("quiz_id", quizId)
+        .order("sequence_order")
 
       if (questionsError) throw questionsError
 
@@ -61,248 +65,178 @@ class QuizHandler {
       this.renderQuiz()
       this.startTimer()
 
-      // Show modal
-      const modal = document.getElementById('quizModal')
-      modal.style.display = 'block'
-
-      // Log quiz start
-      if (window.realTimeManager) {
-        realTimeManager.logActivity('quiz_started', {
-          quiz_id: quizId,
-          quiz_title: quiz.title
-        })
-      }
-    } catch (error) {
-      console.error('Failed to start quiz:', error)
-      alert('Failed to load quiz. Please try again.')
+      document.getElementById("quizModal").style.display = "block"
+    } catch (err) {
+      console.error("Quiz load error:", err)
+      alert("❌ Failed to load quiz.")
     }
   }
 
   renderQuiz() {
-    const container = document.getElementById('quizContainer')
-    if (!container || !this.currentQuiz) return
+    if (!this.currentQuiz) return
+    const lang = document.getElementById("globalLang")?.value || "en"
+    const texts = this.getLangTexts(lang)
 
+    const container = document.getElementById("quizContainer")
     container.innerHTML = `
       <div class="quiz-header">
         <h2>${this.currentQuiz.title}</h2>
         <div class="quiz-timer">
-          <span>Time Remaining: </span>
+          <span>${texts.timeRemaining}: </span>
           <span id="timeRemaining">${this.formatTime(this.timeRemaining)}</span>
         </div>
       </div>
-      
-      <div class="quiz-info">
-        <p>${this.currentQuiz.description || ''}</p>
-        <div class="quiz-meta">
-          <span>Total Questions: ${this.currentQuiz.questions.length}</span>
-          <span>Total Marks: ${this.currentQuiz.total_marks}</span>
-        </div>
+
+      <p>${this.currentQuiz.description || ""}</p>
+      <div class="quiz-meta">
+        <span>${texts.totalQuestions}: ${this.currentQuiz.questions.length}</span>
+        <span>${texts.totalMarks}: ${this.currentQuiz.total_marks}</span>
       </div>
 
       <form id="quizForm">
         <div class="questions-container">
-          ${this.renderQuestions()}
+          ${this.renderQuestions(lang)}
         </div>
-        
         <div class="quiz-actions">
           <button type="button" onclick="quizHandler.submitQuiz()" class="btn primary">
-            Submit Quiz
+            ${texts.submit}
           </button>
           <button type="button" onclick="quizHandler.closeQuiz()" class="btn secondary">
-            Cancel
+            ${texts.cancel}
           </button>
         </div>
       </form>
     `
   }
 
-  renderQuestions() {
+  renderQuestions(lang) {
     return this.currentQuiz.questions
-      .map((question, index) => {
-        return `
-          <div class="question-container" data-question-id="${question.id}">
-            <div class="question-header">
-              <h4>Question ${index + 1}</h4>
-              <span class="question-marks">${question.marks} mark${question.marks > 1 ? 's' : ''}</span>
-            </div>
-            
-            <div class="question-text">
-              ${question.question_text}
-            </div>
-            
-            <div class="answer-options">
-              ${this.renderAnswerOptions(question, index)}
-            </div>
-          </div>
-        `
-      })
-      .join('')
+      .map((q, i) => `
+      <div class="question-container">
+        <div class="question-header">
+          <h4>${this.getLangText(q.question_text, q.question_text_punjabi, lang)}</h4>
+          <span>${q.marks} mark${q.marks > 1 ? "s" : ""}</span>
+        </div>
+        <div class="answer-options">${this.renderAnswerOptions(q, i, lang)}</div>
+      </div>
+    `)
+      .join("")
   }
 
-  renderAnswerOptions(question, questionIndex) {
-    switch (question.question_type) {
-      case 'multiple_choice':
-        return this.renderMultipleChoice(question, questionIndex)
-      case 'true_false':
-        return this.renderTrueFalse(question, questionIndex)
-      case 'short_answer':
-        return this.renderShortAnswer(question, questionIndex)
+  renderAnswerOptions(q, idx, lang) {
+    switch (q.question_type) {
+      case "multiple_choice":
+        return this.renderMultipleChoice(q, idx, lang)
+      case "true_false":
+        return this.renderTrueFalse(idx, lang)
+      case "short_answer":
+        return this.renderShortAnswer(idx, lang)
       default:
-        return '<p>Unknown question type</p>'
+        return "<p>❓ Unknown type</p>"
     }
   }
 
-  renderMultipleChoice(question, questionIndex) {
-    const options = question.options || {}
-    return Object.keys(options)
+  renderMultipleChoice(q, idx, lang) {
+    const opts = q.options || {}
+    return Object.keys(opts)
       .map(
-        key => `
-        <label class="option-label">
-          <input type="radio" 
-                 name="question_${questionIndex}" 
-                 value="${key}"
-                 onchange="quizHandler.saveAnswer(${questionIndex}, '${key}')">
-          <span class="option-text">${options[key]}</span>
-        </label>
-      `
+        k => `
+      <label>
+        <input type="radio" name="q_${idx}" value="${k}" 
+          onchange="quizHandler.saveAnswer(${idx}, '${k}')">
+        ${this.getLangText(opts[k], opts[k + "_pa"], lang)}
+      </label>`
       )
-      .join('')
+      .join("")
   }
 
-  renderTrueFalse(question, questionIndex) {
+  renderTrueFalse(idx, lang) {
+    const texts = this.getLangTexts(lang)
     return `
-      <label class="option-label">
-        <input type="radio" 
-               name="question_${questionIndex}" 
-               value="true"
-               onchange="quizHandler.saveAnswer(${questionIndex}, 'true')">
-        <span class="option-text">True</span>
+      <label>
+        <input type="radio" name="q_${idx}" value="true" 
+          onchange="quizHandler.saveAnswer(${idx}, 'true')"> ${texts.true}
       </label>
-      <label class="option-label">
-        <input type="radio" 
-               name="question_${questionIndex}" 
-               value="false"
-               onchange="quizHandler.saveAnswer(${questionIndex}, 'false')">
-        <span class="option-text">False</span>
-      </label>
-    `
+      <label>
+        <input type="radio" name="q_${idx}" value="false" 
+          onchange="quizHandler.saveAnswer(${idx}, 'false')"> ${texts.false}
+      </label>`
   }
 
-  renderShortAnswer(question, questionIndex) {
-    return `
-      <textarea 
-        name="question_${questionIndex}"
-        placeholder="Enter your answer here..."
-        onchange="quizHandler.saveAnswer(${questionIndex}, this.value)"
-        rows="3"></textarea>
-    `
+  renderShortAnswer(idx, lang) {
+    return <textarea onchange="quizHandler.saveAnswer(${idx}, this.value)" rows="3"></textarea>
   }
 
-  saveAnswer(questionIndex, answer) {
-    this.answers[questionIndex] = answer
+  saveAnswer(idx, ans) {
+    this.answers[idx] = ans
   }
 
   startTimer() {
+    clearInterval(this.timerInterval)
     this.timerInterval = setInterval(() => {
       this.timeRemaining--
+      const el = document.getElementById("timeRemaining")
+      if (el) el.textContent = this.formatTime(this.timeRemaining)
 
-      const timerElement = document.getElementById('timeRemaining')
-      if (timerElement) {
-        timerElement.textContent = this.formatTime(this.timeRemaining)
-
-        // Change color when time is running out
-        if (this.timeRemaining <= 300) {
-          timerElement.style.color = 'red'
-        } else if (this.timeRemaining <= 600) {
-          timerElement.style.color = 'orange'
-        }
-      }
-
-      // Auto-submit when time runs out
-      if (this.timeRemaining <= 0) {
-        this.submitQuiz(true)
-      }
+      if (this.timeRemaining <= 0) this.submitQuiz(true)
     }, 1000)
   }
 
-  formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return ${minutes}:${remainingSeconds.toString().padStart(2, '0')}
-  }
-
-  async submitQuiz(autoSubmit = false) {
+  async submitQuiz(auto = false) {
     try {
-      if (!autoSubmit && !confirm('Are you sure you want to submit your quiz?')) {
-        return
-      }
+      if (!auto && !confirm("Submit quiz?")) return
 
-      const endTime = new Date()
-      const timeTaken = Math.floor((endTime - this.startTime) / 1000)
-
-      // Calculate score
       let score = 0
-      let totalMarks = 0
-
-      this.currentQuiz.questions.forEach((q, index) => {
-        totalMarks += q.marks
-        const givenAnswer = this.answers[index]
-
-        if (
-          givenAnswer &&
-          givenAnswer.toString().trim().toLowerCase() ===
-            q.correct_answer.toString().trim().toLowerCase()
-        ) {
+      this.currentQuiz.questions.forEach((q, i) => {
+        if (this.answers[i] && this.answers[i] === q.correct_answer) {
           score += q.marks
         }
       })
 
-      // Save attempt to DB
-      const { data: { user } } = await supabaseClient.auth.getUser()
+      const endTime = new Date()
+      const timeTaken = Math.floor((endTime - this.startTime) / 1000)
 
-      if (user) {
-        await supabaseClient.from('quiz_attempts').insert({
-          quiz_id: this.currentQuiz.id,
-          student_id: user.id,
-          answers: this.answers,
-          score: score,
-          total_marks: totalMarks,
-          percentage: (score / totalMarks) * 100,
-          time_taken_seconds: timeTaken,
-          is_completed: true,
-          completed_at: new Date().toISOString()
-        })
-      }
+      await supabaseClient.from("quiz_attempts").insert({
+        quiz_id: this.currentQuiz.id,
+        student_id: authManager.getCurrentUser().id,
+        answers: this.answers,
+        score,
+        total_marks: this.currentQuiz.total_marks,
+        is_completed: true,
+        time_taken_seconds: timeTaken,
+        completed_at: new Date().toISOString()
+      })
 
-      alert(Quiz submitted! Your score: ${score}/${totalMarks})
-
-      if (window.realTimeManager) {
-        realTimeManager.logActivity('quiz_completed', {
-          quiz_id: this.currentQuiz.id,
-          score,
-          total: totalMarks
-        })
-      }
-
+      alert(✅ Quiz submitted! Score: ${score}/${this.currentQuiz.total_marks})
       this.closeQuiz()
-    } catch (error) {
-      console.error('Failed to submit quiz:', error)
-      alert('Failed to submit quiz. Please try again.')
+    } catch (err) {
+      console.error("Quiz submit error:", err)
+      alert("❌ Could not submit quiz.")
     }
   }
 
   closeQuiz() {
-    const modal = document.getElementById('quizModal')
-    if (modal) {
-      modal.style.display = 'none'
-    }
-    if (this.timerInterval) {
-      clearInterval(this.timerInterval)
-      this.timerInterval = null
-    }
+    clearInterval(this.timerInterval)
+    this.currentQuiz = null
+    document.getElementById("quizModal").style.display = "none"
+  }
+
+  // Helpers
+  formatTime(sec) {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return ${m}:${s.toString().padStart(2, "0")}
+  }
+
+  getLangText(en, pa, lang) {
+    return lang === "pa" ? pa || en : en
+  }
+
+  getLangTexts(lang) {
+    return lang === "pa"
+      ? { timeRemaining: "ਬਾਕੀ ਸਮਾਂ", totalQuestions: "ਕੁੱਲ ਪ੍ਰਸ਼ਨ", totalMarks: "ਕੁੱਲ ਅੰਕ", submit: "ਜਮ੍ਹਾਂ ਕਰੋ", cancel: "ਰੱਦ ਕਰੋ", true: "ਸਹੀ", false: "ਗਲਤ" }
+      : { timeRemaining: "Time Remaining", totalQuestions: "Total Questions", totalMarks: "Total Marks", submit: "Submit Quiz", cancel: "Cancel", true: "True", false: "False" }
   }
 }
 
-// Create a global instance
-const quizHandler = new QuizHandler()
-window.quizHandler = quizHandler
+window.quizHandler = new QuizHandler()
