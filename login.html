@@ -4,137 +4,60 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Login - Nabha Learning</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-      padding: 1rem;
-    }
-    .login-container {
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
-    }
-    .form-group { margin-bottom: 1rem; }
-    label { display:block; margin-bottom:0.5rem; font-weight:600; color:#333; }
-    input, select {
-      width:100%; padding:0.8rem; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;
-      font-size:1rem;
-    }
-    input:focus, select:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,0.12); }
-    .btn {
-      width:100%; padding:1rem; background:#667eea; color:white; border:none; border-radius:6px; cursor:pointer;
-      font-size:1rem;
-    }
-    .btn:disabled { background:#999; cursor:not-allowed; }
-    .toggle-link { color:#667eea; cursor:pointer; text-decoration:underline; }
-    .message { padding:1rem; margin-top:1rem; border-radius:6px; text-align:center; display:none; }
-    .success{ background:#d4edda; color:#155724; border:1px solid #c3e6cb; display:block; }
-    .error{ background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; display:block; }
-    #signupFields { display:none; }
-    .loading { display:none; text-align:center; color:#667eea; margin-bottom:1rem; }
-    .spinner {
-      border:3px solid #f3f3f3; border-top:3px solid #667eea; border-radius:50%; width:20px; height:20px;
-      animation:spin 1s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px;
-    }
-    @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+    body{font-family:Arial, sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;padding:1rem}
+    .card{background:#fff;padding:2rem;border-radius:10px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+    .form-group{margin-bottom:1rem}
+    label{display:block;margin-bottom:.5rem;font-weight:600}
+    input,select{width:100%;padding:.8rem;border:1px solid #ccc;border-radius:6px}
+    .btn{background:#667eea;color:#fff;padding:1rem;border:none;border-radius:6px;width:100%;cursor:pointer}
+    .toggle{color:#667eea;cursor:pointer;text-decoration:underline;margin-left:8px}
+    .message{margin-top:1rem;padding:.8rem;border-radius:6px;display:none}
+    .success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+    .error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h2 style="text-align:center; margin-bottom:1.25rem;">📚 Nabha Learning</h2>
-
-    <div class="loading" id="loading"><span class="spinner"></span>Processing...</div>
+  <div class="card">
+    <h2 style="text-align:center">📚 Nabha Learning</h2>
+    <div id="message" class="message"></div>
 
     <form id="authForm">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email" type="email" required />
-      </div>
+      <div class="form-group"><label>Email</label><input id="email" type="email" required /></div>
+      <div class="form-group"><label>Password</label><input id="password" type="password" required minlength="6" /></div>
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input id="password" type="password" required minlength="6" />
-      </div>
-
-      <div id="signupFields">
-        <div class="form-group">
-          <label for="name">Full name</label>
-          <input id="name" type="text" />
+      <div id="signupFields" style="display:none">
+        <div class="form-group"><label>Full name</label><input id="name" type="text" /></div>
+        <div class="form-group"><label>Role</label>
+          <select id="role"><option value="">Select</option><option value="student">Student</option><option value="teacher">Teacher</option></select>
         </div>
-
-        <div class="form-group">
-          <label for="role">Role</label>
-          <select id="role">
-            <option value="">Select role</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="school_name">School name</label>
-          <input id="school_name" type="text" />
-        </div>
-
-        <div class="form-group">
-          <label for="grade_level">Grade level</label>
-          <select id="grade_level">
-            <option value="">(optional)</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
+        <div class="form-group"><label>School name</label><input id="school_name" type="text" /></div>
+        <div class="form-group"><label>Grade level</label>
+          <select id="grade_level"><option value="">(optional)</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select>
         </div>
       </div>
 
       <button id="submitBtn" class="btn" type="submit">Login</button>
     </form>
 
-    <p style="text-align:center; margin-top:1rem;">
+    <p style="text-align:center;margin-top:1rem">
       <span id="switchText">Don't have an account?</span>
-      <span class="toggle-link" id="toggleLink"> Sign Up</span>
+      <span id="toggleLink" class="toggle">Sign Up</span>
     </p>
-
-    <div id="message" class="message"></div>
   </div>
 
-  <!-- Supabase client -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = 'https://vrmcjijthmfzlfqqhqvh.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybWNqaWp0aG1memxmcXFocXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDIzMDQsImV4cCI6MjA3MjcxODMwNH0.dnose_pvGlKlE4OO4NojCFiR0DATKoRYlFm4qbm_GpM'; // replace with your key
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
     const authForm = document.getElementById('authForm');
     const toggleLink = document.getElementById('toggleLink');
-    const switchText = document.getElementById('switchText');
     const signupFields = document.getElementById('signupFields');
     const submitBtn = document.getElementById('submitBtn');
-    const loadingDiv = document.getElementById('loading');
+    const switchText = document.getElementById('switchText');
     const messageDiv = document.getElementById('message');
 
     let isSignUp = false;
-
-    function showLoading() { loadingDiv.style.display = 'block'; authForm.style.display = 'none'; }
-    function hideLoading() { loadingDiv.style.display = 'none'; authForm.style.display = 'block'; }
-    function showMessage(text, type='error') {
-      messageDiv.textContent = text;
-      messageDiv.className = 'message ' + (type==='success'?'success':'error');
-      messageDiv.style.display = 'block';
-    }
-    function hideMessage() { messageDiv.style.display = 'none'; }
-
     toggleLink.addEventListener('click', () => {
       isSignUp = !isSignUp;
       if (isSignUp) {
@@ -142,97 +65,61 @@
         submitBtn.textContent = 'Sign Up';
         switchText.textContent = 'Already have an account?';
         toggleLink.textContent = ' Login';
-        document.getElementById('name').required = true;
-        document.getElementById('role').required = true;
-        document.getElementById('school_name').required = true;
       } else {
         signupFields.style.display = 'none';
         submitBtn.textContent = 'Login';
         switchText.textContent = "Don't have an account?";
         toggleLink.textContent = ' Sign Up';
-        document.getElementById('name').required = false;
-        document.getElementById('role').required = false;
-        document.getElementById('school_name').required = false;
       }
-      hideMessage();
+      messageDiv.style.display = 'none';
     });
 
-    // Submit handler
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      hideMessage();
+      messageDiv.style.display = 'none';
 
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
 
-      if (!email || !password) {
-        showMessage('Please provide email and password', 'error'); return;
-      }
-      if (password.length < 6) {
-        showMessage('Password must be at least 6 characters', 'error'); return;
-      }
-
-      showLoading();
+      if (!email || !password) return showMessage('Provide email and password','error');
 
       try {
         if (isSignUp) {
-          const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
-          if (authError) throw authError;
+          const name = document.getElementById('name').value.trim();
+          const role = document.getElementById('role').value;
+          const school = document.getElementById('school_name').value.trim();
+          const grade = document.getElementById('grade_level').value;
 
-          const newUserId = authData?.user?.id;
-          if (newUserId) {
-            const profileData = {
-              id: newUserId,
-              email,
-              full_name: document.getElementById('name').value.trim(),
-              role: document.getElementById('role').value,
-              school_name: document.getElementById('school_name').value.trim(),
-              grade_level: document.getElementById('grade_level').value || null
-            };
-            await supabaseClient.from('profiles').upsert(profileData, { onConflict: 'id' });
-            showMessage('Registration successful! Redirecting...', 'success');
-            setTimeout(() => redirectToDashboard(newUserId), 1000);
-          }
+          if (!name || !role || !school) return showMessage('Fill all signup fields','error');
+
+          await window.authManager.signUp(email, password, name, role, school, grade || null);
+          showMessage('Registered. Confirm your email if required.','success');
+          setTimeout(()=>window.location.replace('login.html'),1200);
         } else {
-          const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
-          if (authError) throw authError;
-          const userId = authData?.user?.id;
-          showMessage('Login successful! Redirecting...', 'success');
-          if (userId) setTimeout(() => redirectToDashboard(userId), 800);
+          await window.authManager.signIn(email, password);
+          showMessage('Login successful. Redirecting...','success');
+          setTimeout(()=>window.authManager.redirectToDashboard(),700);
         }
       } catch (err) {
-        showMessage('Error: ' + (err.message || err), 'error');
-      } finally {
-        hideLoading();
+        console.error(err);
+        showMessage(err?.message || JSON.stringify(err),'error');
       }
     });
 
-    // Redirect based on role
-    async function redirectToDashboard(userId) {
-      try {
-        const { data, error } = await supabaseClient.from('profiles').select('role').eq('id', userId).single();
-        if (error) throw error;
-
-        if (data?.role === 'teacher') {
-          window.location.href = 'teacher-dashboard.html';
-        } else if (data?.role === 'student') {
-          window.location.href = 'student-dashboard.html';
-        } else {
-          window.location.href = 'dashboard.html';
-        }
-      } catch (err) {
-        console.error('redirectToDashboard error:', err);
-        window.location.href = 'dashboard.html';
-      }
+    function showMessage(text,type='error'){
+      messageDiv.textContent = text;
+      messageDiv.className = 'message ' + (type==='success' ? 'success': 'error');
+      messageDiv.style.display = 'block';
     }
 
-    // Auto-redirect if already logged in
     window.addEventListener('load', async () => {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (user) {
-        showMessage('Already logged in, redirecting...', 'success');
-        setTimeout(() => redirectToDashboard(user.id), 800);
-      }
+      try {
+        const { data: { user } } = await window.auth.getUser();
+        if (user) {
+          showMessage('Already logged in. Redirecting...','success');
+          setTimeout(()=>window.authManager.redirectToDashboard(),700);
+        }
+      } catch (e){}
     });
   </script>
 </body>
