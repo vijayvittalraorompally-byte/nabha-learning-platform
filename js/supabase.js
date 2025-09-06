@@ -1,6 +1,13 @@
++2
+-2
+Lines changed: 2 additions & 2 deletions
+Original file line number	Diff line number	Diff line change
+@@ -1,447 +1,447 @@
 import { createClient } from 'https://unpkg.com/@supabase/supabase-js@2'
 
 // Replace with your actual Supabase project details
+const SUPABASE_URL = 'https://cooggqcwbgngqcaypbky.supabase.co' // e.g., 'https://xxxxxxxxxxxxx.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvb2dncWN3YmduZ3FjYXlwYmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMDYwNjAsImV4cCI6MjA3MjU4MjA2MH0.aJAOPyV6JqpfjqlQvL6okQTpu9VuC7jixGNVJ1AABHg' // Your anon public key
 const SUPABASE_URL = 'https://vrmcjijthmfzlfqqhqvh.supabase.co' // e.g., 'https://xxxxxxxxxxxxx.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybWNqaWp0aG1memxmcXFocXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDIzMDQsImV4cCI6MjA3MjcxODMwNH0.dnose_pvGlKlE4OO4NojCFiR0DATKoRYlFm4qbm_GpM' // Your anon public key
 
@@ -34,7 +41,7 @@ class Database {
       .select('*')
       .eq('id', userId)
       .single()
-    
+
     if (error && error.code !== 'PGRST116') {
       throw error
     }
@@ -48,7 +55,7 @@ class Database {
       .eq('id', userId)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -58,7 +65,7 @@ class Database {
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: false })
-    
+
     if (error) throw error
     return data
   }
@@ -73,7 +80,7 @@ class Database {
       `)
       .eq('is_active', true)
       .order('created_at', { ascending: false })
-    
+
     if (error) throw error
     return data
   }
@@ -88,7 +95,7 @@ class Database {
       `)
       .eq('id', courseId)
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -99,7 +106,7 @@ class Database {
       .insert(courseData)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -111,7 +118,7 @@ class Database {
       .eq('id', courseId)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -147,7 +154,7 @@ class Database {
       `)
       .eq('id', videoId)
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -158,7 +165,7 @@ class Database {
       .insert(videoData)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -174,7 +181,7 @@ class Database {
       })
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -186,7 +193,7 @@ class Database {
       .eq('video_id', videoId)
       .eq('student_id', studentId)
       .single()
-    
+
     if (error && error.code !== 'PGRST116') {
       throw error
     }
@@ -225,7 +232,7 @@ class Database {
       `)
       .eq('id', quizId)
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -236,7 +243,7 @@ class Database {
       .insert(quizData)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -247,7 +254,7 @@ class Database {
       .insert(questionData)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -258,7 +265,7 @@ class Database {
       .insert(attemptData)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -270,7 +277,7 @@ class Database {
       .eq('quiz_id', quizId)
       .eq('student_id', studentId)
       .order('started_at', { ascending: false })
-    
+
     if (error) throw error
     return data
   }
@@ -279,18 +286,18 @@ class Database {
   async uploadFile(file, bucket = 'files', path = '') {
     const fileName = `${Date.now()}_${file.name}`
     const filePath = path ? `${path}/${fileName}` : fileName
-    
+
     const { data, error } = await this.client.storage
       .from(bucket)
       .upload(filePath, file)
-    
+
     if (error) throw error
-    
+
     // Get public URL
     const { data: urlData } = this.client.storage
       .from(bucket)
       .getPublicUrl(filePath)
-    
+
     return {
       ...data,
       publicUrl: urlData.publicUrl
@@ -303,7 +310,7 @@ class Database {
       .insert(fileData)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -338,7 +345,7 @@ class Database {
       })
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -354,7 +361,7 @@ class Database {
       })
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -366,7 +373,7 @@ class Database {
       .eq('user_id', userId)
       .order('timestamp', { ascending: false })
       .limit(limit)
-    
+
     if (error) throw error
     return data
   }
@@ -383,7 +390,7 @@ class Database {
       })
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
@@ -411,7 +418,7 @@ class Database {
       .eq('id', notificationId)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   }
