@@ -1,430 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nabha Learning Platform</title>
-    <meta name="description" content="Digital Learning Platform for Students and Teachers">
-    <meta name="theme-color" content="#667eea">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 2rem;
-        }
-        
-        .hero-content {
-            max-width: 800px;
-        }
-        
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .cta-btn {
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-            border: none;
-            border-radius: 50px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .cta-btn.primary {
-            background: white;
-            color: #667eea;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        
-        .cta-btn.secondary {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-        
-        .cta-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-        
-        .features {
-            padding: 4rem 2rem;
-            background: #f8fafc;
-        }
-        
-        .features-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .features h2 {
-            text-align: center;
-            color: #2d3748;
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-        
-        .feature-card {
-            background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-card h3 {
-            color: #2d3748;
-            margin-bottom: 1rem;
-        }
-        
-        .feature-card p {
-            color: #718096;
-            line-height: 1.6;
-        }
-        
-        .stats {
-            padding: 4rem 2rem;
-            background: #2d3748;
-            color: white;
-        }
-        
-        .stats-container {
-            max-width: 800px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-        
-        .stat-item {
-            padding: 1rem;
-        }
-        
-        .stat-number {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #667eea;
-            display: block;
-        }
-        
-        .stat-label {
-            font-size: 1.1rem;
-            margin-top: 0.5rem;
-        }
-        
-        .footer {
-            background: #1a202c;
-            color: #a0aec0;
-            padding: 2rem;
-            text-align: center;
-        }
-        
-        .install-prompt {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #667eea;
-            color: white;
-            padding: 1rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            display: none;
-            align-items: center;
-            gap: 1rem;
-            z-index: 1000;
-        }
-        
-        .install-prompt button {
-            background: white;
-            color: #667eea;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-            
-            .cta-buttons {
-                flex-direction: column;
-            }
-            
-            .cta-btn {
-                width: 100%;
-                max-width: 300px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nabha Learning Platform</title>
+  <meta name="description" content="Digital Learning Platform for Students and Teachers"/>
+  <meta name="theme-color" content="#667eea"/>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png"/>
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .hero {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+    }
+    .hero-content { max-width: 800px; }
+    .hero h1 { font-size: 3rem; margin-bottom: 1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .hero p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; }
+    .cta-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .cta-btn {
+      padding: 1rem 2rem; font-size: 1.1rem; border: none; border-radius: 50px;
+      text-decoration: none; transition: all 0.3s ease; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .cta-btn.primary { background: white; color: #667eea; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .cta-btn.secondary { background: transparent; color: white; border: 2px solid white; }
+    .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+    .features { padding: 4rem 2rem; background: #f8fafc; }
+    .features-container { max-width: 1200px; margin: 0 auto; }
+    .features h2 { text-align: center; color: #2d3748; font-size: 2.5rem; margin-bottom: 3rem; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+    .feature-card { background: white; padding: 2rem; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: transform 0.3s ease; }
+    .feature-card:hover { transform: translateY(-5px); }
+    .feature-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .feature-card h3 { color: #2d3748; margin-bottom: 1rem; }
+    .feature-card p { color: #718096; line-height: 1.6; }
+    .stats { padding: 4rem 2rem; background: #2d3748; color: white; }
+    .stats-container { max-width: 800px; margin: 0 auto; text-align: center; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-top: 2rem; }
+    .stat-number { font-size: 3rem; font-weight: bold; color: #667eea; display: block; }
+    .stat-label { font-size: 1.1rem; margin-top: 0.5rem; }
+    .footer { background: #1a202c; color: #a0aec0; padding: 2rem; text-align: center; }
+  </style>
 </head>
 <body>
-    <!-- Install Prompt -->
-    <div class="install-prompt" id="installPrompt">
-        <span>📱 Install app for better experience</span>
-        <button onclick="installApp()">Install</button>
-        <button onclick="hideInstallPrompt()" style="background: transparent; color: white;">✕</button>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>🎓 Nabha Learning Platform</h1>
+      <p>Empowering education through technology. Interactive learning for students and comprehensive teaching tools for educators.</p>
+      <div class="cta-buttons">
+        <a href="login.html" class="cta-btn primary">🚀 Get Started</a>
+        <a href="#features" class="cta-btn secondary">📚 Learn More</a>
+      </div>
     </div>
+  </section>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>🎓 Nabha Learning Platform</h1>
-            <p>Empowering education through technology. Interactive learning for students and comprehensive teaching tools for educators.</p>
-            
-            <div class="cta-buttons">
-                <a href="login.html" class="cta-btn primary">
-                    🚀 Get Started
-                </a>
-                <a href="#features" class="cta-btn secondary">
-                    📚 Learn More
-                </a>
-            </div>
-        </div>
-    </section>
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <div class="features-container">
+      <h2>Why Choose Our Platform?</h2>
+      <div class="features-grid">
+        <div class="feature-card"><div class="feature-icon">🎥</div><h3>Interactive Videos</h3><p>Engaging educational videos with progress tracking and interactive elements.</p></div>
+        <div class="feature-card"><div class="feature-icon">📝</div><h3>Smart Quizzes</h3><p>Create and take quizzes with instant feedback and detailed analytics.</p></div>
+        <div class="feature-card"><div class="feature-icon">📊</div><h3>Real-time Analytics</h3><p>Track student progress and performance analytics in real time.</p></div>
+        <div class="feature-card"><div class="feature-icon">👥</div><h3>Collaborative Learning</h3><p>Seamless learning environment with live interaction features.</p></div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="features-container">
-            <h2>Why Choose Our Platform?</h2>
-            
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🎥</div>
-                    <h3>Interactive Videos</h3>
-                    <p>Engaging educational videos with progress tracking and interactive elements to enhance learning experience.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📝</div>
-                    <h3>Smart Quizzes</h3>
-                    <p>Create and take quizzes with instant feedback, detailed analytics, and adaptive difficulty levels.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Real-time Analytics</h3>
-                    <p>Track student progress, engagement metrics, and performance analytics in real-time dashboards.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">👥</div>
-                    <h3>Collaborative Learning</h3>
-                    <p>Connect students and teachers in a seamless learning environment with live interaction features.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <h3>Mobile-First Design</h3>
-                    <p>Access your learning materials anywhere, anytime with our responsive Progressive Web App.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🌐</div>
-                    <h3>Offline Support</h3>
-                    <p>Download content for offline access, ensuring uninterrupted learning even without internet.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="stats-container">
+      <h2>Platform Statistics</h2>
+      <div class="stats-grid">
+        <div><span class="stat-number">500+</span><div class="stat-label">Active Students</div></div>
+        <div><span class="stat-number">50+</span><div class="stat-label">Expert Teachers</div></div>
+        <div><span class="stat-number">1000+</span><div class="stat-label">Educational Videos</div></div>
+        <div><span class="stat-number">200+</span><div class="stat-label">Interactive Quizzes</div></div>
+      </div>
+    </div>
+  </section>
 
-    <!-- Stats Section -->
-    <section class="stats">
-        <div class="stats-container">
-            <h2>Platform Statistics</h2>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-number" id="studentCount">500+</span>
-                    <div class="stat-label">Active Students</div>
-                </div>
-                
-                <div class="stat-item">
-                    <span class="stat-number" id="teacherCount">50+</span>
-                    <div class="stat-label">Expert Teachers</div>
-                </div>
-                
-                <div class="stat-item">
-                    <span class="stat-number" id="videoCount">1000+</span>
-                    <div class="stat-label">Educational Videos</div>
-                </div>
-                
-                <div class="stat-item">
-                    <span class="stat-number" id="quizCount">200+</span>
-                    <div class="stat-label">Interactive Quizzes</div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2024 Nabha Learning Platform. Built with ❤ for education.</p>
+    <p>Powered by modern web technologies and hosted on GitHub Pages.</p>
+  </footer>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p>&copy; 2024 Nabha Learning Platform. Built with ❤ for education.</p>
-        <p>Powered by modern web technologies and hosted on GitHub Pages.</p>
-    </footer>
-
-    <!-- Scripts -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <script src="js/supabase.js"></script>
-    <script>
-        // PWA Installation
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            
-            // Show install prompt after 3 seconds
-            setTimeout(() => {
-                document.getElementById('installPrompt').style.display = 'flex';
-            }, 3000);
-        });
-        
-        function installApp() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install prompt');
-                    }
-                    deferredPrompt = null;
-                    hideInstallPrompt();
-                });
-            }
+  <!-- Scripts -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    // Redirect logged-in users to dashboard
+    window.addEventListener("load", async () => {
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user) {
+          window.location.href = "dashboard.html"; // router decides student/teacher
         }
-        
-        function hideInstallPrompt() {
-            document.getElementById('installPrompt').style.display = 'none';
-        }
-        
-        // Service Worker Registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then((registration) => {
-                        console.log('SW registered: ', registration);
-                    })
-                    .catch((registrationError) => {
-                        console.log('SW registration failed: ', registrationError);
-                    });
-            });
-        }
-        
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
-        
-        // Counter animation
-        function animateCounter(element, target) {
-            let current = 0;
-            const increment = target / 100;
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= target) {
-                    current = target;
-                    clearInterval(timer);
-                }
-                element.textContent = Math.floor(current) + '+';
-            }, 30);
-        }
-        
-        // Trigger counter animation when stats section is visible
-        const observerOptions = {
-            threshold: 0.5
-        };
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    animateCounter(document.getElementById('studentCount'), 500);
-                    animateCounter(document.getElementById('teacherCount'), 50);
-                    animateCounter(document.getElementById('videoCount'), 1000);
-                    animateCounter(document.getElementById('quizCount'), 200);
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-        
-        observer.observe(document.querySelector('.stats'));
-        
-        // Check authentication status
-        window.addEventListener('load', async () => {
-            try {
-                if (supabaseClient) {
-                    const { data: { user } } = await supabaseClient.auth.getUser();
-                    if (user) {
-                        // User is already logged in, redirect to dashboard
-                        window.location.href = 'dashboard.html';
-                    }
-                }
-            } catch (error) {
-                console.log('Not authenticated');
-            }
-        });
-    </script>
+      } catch (err) {
+        console.log("Not authenticated");
+      }
+    });
+  </script>
 </body>
 </html>
