@@ -1,67 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard - Nabha Learning</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/dashboard.css">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Dashboard Router</title>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
 </head>
 <body>
-  <div class="loading-screen" id="loadingScreen">
-    <div class="loading"></div>
-    <p>Loading Dashboard...</p>
-  </div>
-
-  <script src="js/supabase.js"></script>
+  <div style="padding:3rem;text-align:center">Redirecting...</div>
   <script>
-    async function initializeDashboard() {
+    (async ()=>{
       try {
-        // Check if user is logged in
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (!user) {
-          window.location.href = "login.html";
-          return;
-        }
-
-        // Get profile info
-        const { data: profile, error } = await supabaseClient
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-
-        if (error || !profile) {
-          console.error("Profile fetch error:", error);
-          window.location.href = "login.html";
-          return;
-        }
-
-        // Update online status
-        await supabaseClient
-          .from("profiles")
-          .update({ 
-            is_online: true, 
-            last_active: new Date().toISOString() 
-          })
-          .eq("id", user.id);
-
-        // Redirect by role
-        if (profile.role === "student") {
-          window.location.href = "student-dashboard.html";
-        } else if (profile.role === "teacher") {
-          window.location.href = "teacher-dashboard.html";
-        } else {
-          window.location.href = "index.html"; // fallback
-        }
-      } catch (err) {
-        console.error("Dashboard init error:", err);
-        window.location.href = "login.html";
+        const { data: { user } } = await auth.getUser();
+        if (!user) { window.location.replace('login.html'); return; }
+        const profile = await db.getProfile(user.id);
+        if (!profile) { window.location.replace('login.html'); return; }
+        if (profile.role === 'teacher') window.location.replace('teacher-dashboard.html');
+        else if (profile.role === 'student') window.location.replace('student-dashboard.html');
+        else window.location.replace('login.html');
+      } catch (e) {
+        console.error(e);
+        window.location.replace('login.html');
       }
-    }
-
-    document.addEventListener("DOMContentLoaded", initializeDashboard);
+    })();
   </script>
 </body>
 </html>
