@@ -1,327 +1,447 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://unpkg.com/@supabase/supabase-js@2'
 
-// Replace with your Supabase URL and anon key
-const supabaseUrl = 'https://cooggqcwbgngqcaypbky.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvb2dncWN3YmduZ3FjYXlwYmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMDYwNjAsImV4cCI6MjA3MjU4MjA2MH0.aJAOPyV6JqpfjqlQvL6okQTpu9VuC7jixGNVJ1AABHg'
+// Replace with your actual Supabase project details
+const SUPABASE_URL = 'https://cooggqcwbgngqcaypbky.supabase.co' // e.g., 'https://xxxxxxxxxxxxx.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvb2dncWN3YmduZ3FjYXlwYmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMDYwNjAsImV4cCI6MjA3MjU4MjA2MH0.aJAOPyV6JqpfjqlQvL6okQTpu9VuC7jixGNVJ1AABHg' // Your anon public key
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
+// Initialize Supabase client
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
+  }
+})
 
-// Helper functions for common operations
+// Auth instance
 export const auth = supabase.auth
 
-// Database helper functions
-export const db = {
+// Database helper class
+class Database {
+  constructor(client) {
+    this.client = client
+  }
+
   // Profile operations
   async getProfile(userId) {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single()
     
-    if (error) throw error
+    if (error && error.code !== 'PGRST116') {
+      throw error
+    }
     return data
-  },
+  }
 
   async updateProfile(userId, updates) {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('profiles')
-      .update(updates)
+      .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', userId)
       .select()
       .single()
     
     if (error) throw error
     return data
-  },
+  }
+
+  async getAllProfiles() {
+    const { data, error } = await this.client
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data
+  }
+
+  // Course operations
+  async getCourses() {
+    const { data, error } = await this.client
+      .from('courses')
+      .select(`
+        *,
+        instructor:profiles!courses_instructor_id_fkey(full_name, avatar_url)
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data
+  }
+
+  async getCourse(courseId) {
+    const { data, error } = await this.client
+      .from('courses')
+      .select(`
+        *,
+        instructor:profiles!courses_instructor_id_fkey(full_name, avatar_url),
+        videos(id, title, description, duration_seconds, thumbnail_url, created_at)
+      `)
+      .eq('id', courseId)
+      .single()
+    
+    if (error) throw error
+    return data
+  }
+
+  async createCourse(courseData) {
+    const { data, error } = await this.client
+      .from('courses')
+      .insert(courseData)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  }
+
+  async updateCourse(courseId, updates) {
+    const { data, error } = await this.client
+      .from('courses')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', courseId)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  }
 
   // Video operations
-  async getVideos(teacherId = null) {
-    let query = supabase
+  async getVideos(courseId = null) {
+    let query = this.client
       .from('videos')
       .select(`
         *,
-        profiles!videos_teacher_id_fkey(full_name)
+        teacher:profiles!videos_teacher_id_fkey(full_name, avatar_url),
+        course:courses(title)
       `)
-      .eq('is_published', true)
+      .eq('is_approved', true)
       .order('created_at', { ascending: false })
 
-    if (teacherId) {
-      query = query.eq('teacher_id', teacherId)
+    if (courseId) {
+      query = query.eq('course_id', courseId)
     }
 
     const { data, error } = await query
     if (error) throw error
     return data
-  },
+  }
 
   async getVideo(videoId) {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('videos')
       .select(`
         *,
-        profiles!videos_teacher_id_fkey(full_name)
+        teacher:profiles!videos_teacher_id_fkey(full_name, avatar_url),
+        course:courses(title, description)
       `)
       .eq('id', videoId)
       .single()
     
     if (error) throw error
     return data
-  },
+  }
 
   async createVideo(videoData) {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('videos')
-      .insert([videoData])
+      .insert(videoData)
       .select()
       .single()
     
     if (error) throw error
     return data
-  },
+  }
 
-  async updateVideo(videoId, updates) {
-    const { data, error } = await supabase
-      .from('videos')
-      .update(updates)
-      .eq('id', videoId)
+  async updateVideoProgress(videoId, studentId, progressSeconds) {
+    const { data, error } = await this.client
+      .from('video_progress')
+      .upsert({
+        video_id: videoId,
+        student_id: studentId,
+        progress_seconds: progressSeconds,
+        last_watched: new Date().toISOString()
+      })
       .select()
       .single()
     
     if (error) throw error
     return data
-  },
+  }
 
-  async deleteVideo(videoId) {
-    const { error } = await supabase
-      .from('videos')
-      .delete()
-      .eq('id', videoId)
+  async getVideoProgress(videoId, studentId) {
+    const { data, error } = await this.client
+      .from('video_progress')
+      .select('*')
+      .eq('video_id', videoId)
+      .eq('student_id', studentId)
+      .single()
     
-    if (error) throw error
-  },
+    if (error && error.code !== 'PGRST116') {
+      throw error
+    }
+    return data
+  }
 
   // Quiz operations
-  async getQuizzes(teacherId = null, videoId = null) {
-    let query = supabase
+  async getQuizzes(courseId = null) {
+    let query = this.client
       .from('quizzes')
       .select(`
         *,
-        profiles!quizzes_teacher_id_fkey(full_name),
-        videos(title)
+        teacher:profiles!quizzes_teacher_id_fkey(full_name),
+        course:courses(title)
       `)
-      .eq('is_published', true)
+      .eq('is_active', true)
       .order('created_at', { ascending: false })
 
-    if (teacherId) {
-      query = query.eq('teacher_id', teacherId)
-    }
-
-    if (videoId) {
-      query = query.eq('video_id', videoId)
+    if (courseId) {
+      query = query.eq('course_id', courseId)
     }
 
     const { data, error } = await query
     if (error) throw error
     return data
-  },
+  }
 
   async getQuiz(quizId) {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('quizzes')
       .select(`
         *,
-        profiles!quizzes_teacher_id_fkey(full_name),
-        videos(title),
-        quiz_questions(*)
+        teacher:profiles!quizzes_teacher_id_fkey(full_name),
+        course:courses(title),
+        questions:quiz_questions(*)
       `)
       .eq('id', quizId)
       .single()
     
     if (error) throw error
     return data
-  },
+  }
 
   async createQuiz(quizData) {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('quizzes')
-      .insert([quizData])
+      .insert(quizData)
       .select()
       .single()
     
     if (error) throw error
     return data
-  },
+  }
 
-  async updateQuiz(quizId, updates) {
-    const { data, error } = await supabase
-      .from('quizzes')
-      .update(updates)
-      .eq('id', quizId)
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data
-  },
-
-  async deleteQuiz(quizId) {
-    const { error } = await supabase
-      .from('quizzes')
-      .delete()
-      .eq('id', quizId)
-    
-    if (error) throw error
-  },
-
-  // Quiz questions operations
   async createQuizQuestion(questionData) {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('quiz_questions')
-      .insert([questionData])
+      .insert(questionData)
       .select()
       .single()
     
     if (error) throw error
     return data
-  },
+  }
 
-  async updateQuizQuestion(questionId, updates) {
-    const { data, error } = await supabase
-      .from('quiz_questions')
-      .update(updates)
-      .eq('id', questionId)
+  async submitQuizAttempt(attemptData) {
+    const { data, error } = await this.client
+      .from('quiz_attempts')
+      .insert(attemptData)
       .select()
       .single()
     
     if (error) throw error
     return data
-  },
+  }
 
-  async deleteQuizQuestion(questionId) {
-    const { error } = await supabase
-      .from('quiz_questions')
-      .delete()
-      .eq('id', questionId)
-    
-    if (error) throw error
-  },
-
-  // Video progress operations
-  async getVideoProgress(studentId, videoId) {
-    const { data, error } = await supabase
-      .from('video_progress')
-      .select('*')
-      .eq('student_id', studentId)
-      .eq('video_id', videoId)
-      .single()
-    
-    if (error && error.code !== 'PGRST116') throw error
-    return data
-  },
-
-  async updateVideoProgress(studentId, videoId, progressData) {
-    const { data, error } = await supabase
-      .from('video_progress')
-      .upsert([{
-        student_id: studentId,
-        video_id: videoId,
-        ...progressData
-      }])
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data
-  },
-
-  // Quiz attempts operations
-  async getQuizAttempt(studentId, quizId) {
-    const { data, error } = await supabase
+  async getQuizAttempts(quizId, studentId) {
+    const { data, error } = await this.client
       .from('quiz_attempts')
       .select('*')
-      .eq('student_id', studentId)
       .eq('quiz_id', quizId)
-      .single()
+      .eq('student_id', studentId)
+      .order('started_at', { ascending: false })
     
-    if (error && error.code !== 'PGRST116') throw error
+    if (error) throw error
     return data
-  },
+  }
 
-  async createQuizAttempt(attemptData) {
-    const { data, error } = await supabase
-      .from('quiz_attempts')
-      .upsert([attemptData])
+  // File operations
+  async uploadFile(file, bucket = 'files', path = '') {
+    const fileName = `${Date.now()}_${file.name}`
+    const filePath = path ? `${path}/${fileName}` : fileName
+    
+    const { data, error } = await this.client.storage
+      .from(bucket)
+      .upload(filePath, file)
+    
+    if (error) throw error
+    
+    // Get public URL
+    const { data: urlData } = this.client.storage
+      .from(bucket)
+      .getPublicUrl(filePath)
+    
+    return {
+      ...data,
+      publicUrl: urlData.publicUrl
+    }
+  }
+
+  async createFileRecord(fileData) {
+    const { data, error } = await this.client
+      .from('files')
+      .insert(fileData)
       .select()
       .single()
     
     if (error) throw error
     return data
-  },
+  }
 
-  // Analytics operations
-  async logAnalytics(analyticsData) {
-    const { error } = await supabase
-      .from('real_time_analytics')
-      .insert([analyticsData])
-    
-    if (error) throw error
-  },
-
-  async getAnalytics(teacherId, startDate, endDate) {
-    let query = supabase
-      .from('real_time_analytics')
+  // Analytics and progress
+  async getStudentProgress(studentId, courseId = null) {
+    let query = this.client
+      .from('student_progress')
       .select(`
         *,
-        profiles!real_time_analytics_student_id_fkey(full_name),
-        videos(title),
-        quizzes(title)
+        course:courses(title, thumbnail_url)
       `)
-      .order('timestamp', { ascending: false })
+      .eq('student_id', studentId)
 
-    if (startDate) {
-      query = query.gte('timestamp', startDate)
-    }
-
-    if (endDate) {
-      query = query.lte('timestamp', endDate)
+    if (courseId) {
+      query = query.eq('course_id', courseId)
     }
 
     const { data, error } = await query
     if (error) throw error
+    return data
+  }
 
-    // Filter by teacher's content
-    return data.filter(item => 
-      (item.videos && item.videos.teacher_id === teacherId) ||
-      (item.quizzes && item.quizzes.teacher_id === teacherId)
-    )
+  async updateStudentProgress(studentId, courseId, progressData) {
+    const { data, error } = await this.client
+      .from('student_progress')
+      .upsert({
+        student_id: studentId,
+        course_id: courseId,
+        ...progressData,
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  }
+
+  // Activity logging
+  async logActivity(userId, activityType, activityData = {}) {
+    const { data, error } = await this.client
+      .from('activity_log')
+      .insert({
+        user_id: userId,
+        activity_type: activityType,
+        activity_data: activityData
+      })
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  }
+
+  async getRecentActivity(userId, limit = 10) {
+    const { data, error } = await this.client
+      .from('activity_log')
+      .select('*')
+      .eq('user_id', userId)
+      .order('timestamp', { ascending: false })
+      .limit(limit)
+    
+    if (error) throw error
+    return data
+  }
+
+  // Notifications
+  async createNotification(userId, title, message, type = 'info') {
+    const { data, error } = await this.client
+      .from('notifications')
+      .insert({
+        user_id: userId,
+        title,
+        message,
+        type
+      })
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  }
+
+  async getNotifications(userId, unreadOnly = false) {
+    let query = this.client
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (unreadOnly) {
+      query = query.eq('is_read', false)
+    }
+
+    const { data, error } = await query
+    if (error) throw error
+    return data
+  }
+
+  async markNotificationAsRead(notificationId) {
+    const { data, error } = await this.client
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', notificationId)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  }
+
+  // Real-time subscriptions
+  subscribeToTable(table, callback, filter = null) {
+    let channel = this.client
+      .channel(`${table}_changes`)
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: table,
+          ...(filter && { filter })
+        }, 
+        callback
+      )
+      .subscribe()
+
+    return channel
+  }
+
+  unsubscribe(channel) {
+    this.client.removeChannel(channel)
   }
 }
 
-// Real-time subscriptions
-export const subscriptions = {
-  subscribeToVideoProgress(studentId, callback) {
-    return supabase
-      .channel('video_progress')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'video_progress',
-        filter: `student_id=eq.${studentId}`
-      }, callback)
-      .subscribe()
-  },
+// Create database instance
+const db = new Database(supabase)
 
-  subscribeToAnalytics(teacherId, callback) {
-    return supabase
-      .channel('analytics')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'real_time_analytics'
-      }, callback)
-      .subscribe()
-  }
-}
-
+// Export everything
+export { supabase, db }
 export default supabase
