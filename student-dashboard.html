@@ -1,64 +1,210 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Student Dashboard</title>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="js/supabase.js"></script>
-  <script src="js/auth.js"></script>
-  <style>
-    body{font-family:Arial;margin:0;background:#f5f7fb}
-    .nav{display:flex;justify-content:space-between;padding:1rem;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.06)}
-    .container{max-width:1100px;margin:1rem auto;padding:1rem}
-    .card{background:#fff;padding:1rem;border-radius:8px;margin-bottom:1rem}
-    .btn{background:#667eea;color:#fff;padding:.5rem .8rem;border:none;border-radius:6px;cursor:pointer}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Digital Learning</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
-  <div class="nav">
-    <div><strong>📚 Student Dashboard</strong> <span id="studentName" style="color:#666;margin-left:8px">Loading...</span></div>
-    <div>
-      <button class="btn" id="home">Home</button>
-      <button class="btn" id="logout">Logout</button>
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1 class="nav-title">📚 Student Dashboard</h1>
+            <div class="nav-actions">
+                <div class="online-indicator" id="onlineStatus">
+                    <span class="status-dot online"></span>
+                    <span>Online</span>
+                </div>
+                <div class="notification-bell" onclick="toggleNotifications()">
+                    🔔 <span class="notification-count" id="notificationCount">0</span>
+                </div>
+                <button onclick="auth.signOut()" class="logout-btn">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="user-profile" id="userProfile">
+                <div class="profile-avatar">👤</div>
+                <div class="profile-info">
+                    <h3 id="userName">Loading...</h3>
+                    <p id="userGrade">Grade -</p>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#courses" class="nav-link active" data-section="courses">
+                    📖 My Courses
+                </a>
+                <a href="#videos" class="nav-link" data-section="videos">
+                    🎥 Videos
+                </a>
+                <a href="#quizzes" class="nav-link" data-section="quizzes">
+                    📝 Quizzes
+                </a>
+                <a href="#progress" class="nav-link" data-section="progress">
+                    📊 My Progress
+                </a>
+                <a href="#assignments" class="nav-link" data-section="assignments">
+                    📋 Assignments
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <!-- Courses Section -->
+            <section id="courses" class="content-section active">
+                <div class="section-header">
+                    <h2>📖 My Courses</h2>
+                    <div class="search-box">
+                        <input type="text" placeholder="Search courses..." id="courseSearch">
+                        <button onclick="searchCourses()">🔍</button>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="totalCourses">0</h3>
+                        <p>Total Courses</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="completedCourses">0</h3>
+                        <p>Completed</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="inProgressCourses">0</h3>
+                        <p>In Progress</p>
+                    </div>
+                </div>
+
+                <div class="course-grid" id="courseGrid">
+                    <!-- Courses will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Videos Section -->
+            <section id="videos" class="content-section">
+                <div class="section-header">
+                    <h2>🎥 Educational Videos</h2>
+                    <select id="videoFilter">
+                        <option value="all">All Videos</option>
+                        <option value="watched">Watched</option>
+                        <option value="unwatched">Not Watched</option>
+                    </select>
+                </div>
+
+                <div class="video-grid" id="videoGrid">
+                    <!-- Videos will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Quizzes Section -->
+            <section id="quizzes" class="content-section">
+                <div class="section-header">
+                    <h2>📝 Available Quizzes</h2>
+                    <div class="quiz-filters">
+                        <select id="quizFilter">
+                            <option value="all">All Quizzes</option>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="quiz-grid" id="quizGrid">
+                    <!-- Quizzes will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Progress Section -->
+            <section id="progress" class="content-section">
+                <div class="section-header">
+                    <h2>📊 My Learning Progress</h2>
+                </div>
+
+                <div class="progress-overview">
+                    <div class="progress-chart">
+                        <canvas id="progressChart" width="400" height="200"></canvas>
+                    </div>
+                    
+                    <div class="progress-details">
+                        <div class="progress-item">
+                            <h4>Overall Progress</h4>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="overallProgress" style="width: 0%"></div>
+                            </div>
+                            <span id="overallPercentage">0%</span>
+                        </div>
+                        
+                        <div class="recent-activities">
+                            <h4>Recent Activities</h4>
+                            <div id="recentActivities">
+                                <!-- Activities will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Assignments Section -->
+            <section id="assignments" class="content-section">
+                <div class="section-header">
+                    <h2>📋 Assignments</h2>
+                </div>
+
+                <div class="assignment-tabs">
+                    <button class="tab-btn active" data-tab="pending">Pending</button>
+                    <button class="tab-btn" data-tab="submitted">Submitted</button>
+                    <button class="tab-btn" data-tab="graded">Graded</button>
+                </div>
+
+                <div class="assignment-list" id="assignmentList">
+                    <!-- Assignments will be loaded here -->
+                </div>
+            </section>
+        </main>
     </div>
-  </div>
 
-  <div class="container">
-    <div class="card">
-      <h3>Videos</h3>
-      <div id="videoList">Loading...</div>
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <button onclick="toggleNotifications()">×</button>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <!-- Notifications will be loaded here -->
+        </div>
     </div>
 
-    <div class="card">
-      <h3>Quizzes</h3>
-      <div id="quizList">Loading...</div>
+    <!-- Video Player Modal -->
+    <div class="modal" id="videoModal">
+        <div class="modal-content video-modal-content">
+            <span class="close" onclick="closeVideoModal()">&times;</span>
+            <video id="videoPlayer" controls width="100%" height="400">
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="video-info">
+                <h3 id="videoTitle"></h3>
+                <p id="videoDescription"></p>
+                <div class="video-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="videoProgress"></div>
+                    </div>
+                    <span id="videoProgressText">0%</span>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src="js/quiz-handler.js"></script>
-  <script>
-    (async ()=>{
-      await new Promise(r=>setTimeout(r,200));
-      if (!window.authManager || !window.authManager.isStudent()) { window.location.replace('dashboard.html'); return; }
-      document.getElementById('studentName').textContent = window.authManager.getDisplayName();
-      document.getElementById('logout').addEventListener('click', ()=>window.authManager.signOut());
-      document.getElementById('home').addEventListener('click', ()=>location.href='index.html');
-
-      // load videos
-      const { data: videos, error: vErr } = await window.db.getVideos();
-      const vCon = document.getElementById('videoList');
-      if (vErr) { vCon.textContent = 'Failed to load videos'; }
-      else if (!videos.length) vCon.textContent = 'No videos';
-      else vCon.innerHTML = videos.map(v => <div style="padding:.5rem;border-bottom:1px solid #eee"><strong>${v.title}</strong><br/><small>${v.description||''}</small><div style="margin-top:.3rem"><a href="video-player.html?id=${v.id}">Watch</a></div></div>).join('');
-
-      // load quizzes
-      const { data: quizzes, error: qErr } = await window.db.getQuizzes();
-      const qCon = document.getElementById('quizList');
-      if (qErr) qCon.textContent = 'Failed to load quizzes';
-      else if (!quizzes.length) qCon.textContent = 'No quizzes';
-      else qCon.innerHTML = quizzes.map(q => <div style="padding:.5rem;border-bottom:1px solid #eee"><strong>${q.title}</strong> • ${q.time_limit_minutes} min <div style="margin-top:.3rem"><button class="btn" onclick="startQuiz('${q.id}')">Start Quiz</button></div></div>).join('');
-    })();
-  </script>
+    <script src="js/supabase.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/real-time.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/video-handler.js"></script>
 </body>
 </html>
