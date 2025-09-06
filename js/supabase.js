@@ -1,8 +1,8 @@
 import { createClient } from 'https://unpkg.com/@supabase/supabase-js@2'
 
 // Replace with your actual Supabase project details
-const SUPABASE_URL = 'https://cooggqcwbgngqcaypbky.supabase.co' // e.g., 'https://xxxxxxxxxxxxx.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvb2dncWN3YmduZ3FjYXlwYmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMDYwNjAsImV4cCI6MjA3MjU4MjA2MH0.aJAOPyV6JqpfjqlQvL6okQTpu9VuC7jixGNVJ1AABHg' // Your anon public key
+const SUPABASE_URL = 'https://vrmcjijthmfzlfqqhqvh.supabase.co' // e.g., 'https://xxxxxxxxxxxxx.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybWNqaWp0aG1memxmcXFocXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDIzMDQsImV4cCI6MjA3MjcxODMwNH0.dnose_pvGlKlE4OO4NojCFiR0DATKoRYlFm4qbm_GpM' // Your anon public key
 
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
