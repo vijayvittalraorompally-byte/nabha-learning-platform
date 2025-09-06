@@ -63,6 +63,8 @@
       <div class="cta-buttons">
         <a href="login.html" class="cta-btn primary">🚀 Get Started</a>
         <a href="#features" class="cta-btn secondary">📚 Learn More</a>
+        <!-- Install Button (hidden until eligible) -->
+        <button id="installBtn" class="cta-btn primary" style="display: none;">📲 Install App</button>
       </div>
     </div>
   </section>
@@ -113,6 +115,30 @@
       } catch (err) {
         console.log("Not authenticated");
       }
+    });
+
+    // PWA Install Button
+    let deferredPrompt;
+    const installBtn = document.getElementById("installBtn");
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = "inline-flex"; // show button
+    });
+
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log("User choice:", outcome);
+      deferredPrompt = null;
+      installBtn.style.display = "none";
+    });
+
+    window.addEventListener("appinstalled", () => {
+      console.log("PWA was installed");
+      installBtn.style.display = "none";
     });
   </script>
 </body>
