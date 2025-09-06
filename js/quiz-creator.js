@@ -1,147 +1,100 @@
-class QuizCreator {
-  constructor() {
-    this.questions = []
-    this.init()
-  }
+<!-- js/quiz-creator.js -->
+<script>
+(() => {
+  const QuizCreator = {
+    async createQuizWithQuestions(quizData, questions) {
+      try {
+        if (!window.authManager || !window.authManager.isTeacher()) return { success:false, error:'Not authorized' };
+        quizData.teacher_id = window.authManager.currentUser.id;
+        quizData.created_at = new Date().toISOString();
+        const { data: quiz, error: qErr } = await window.db.createQuiz(quizData);
+        if (qErr) return { success:false, error: qErr.message || qErr };
 
-  init() {
-    const form = document.getElementById("createQuizForm")
-    if (form) {
-      form.addEventListener("submit", e => {
-        e.preventDefault()
-        this.submitQuiz()
-      })
-    }
-  }
+        for (let i=0;i<questions.length;i++){
+          const q = questions[i];
+          const payload = {
+            quiz_id: quiz.id,
+            question_text: q.question_text,
+            question_type: q.question_type,
+            options: q.options || {},
+            correct_answer: q.correct_answer,
+            marks: q.marks || 1,
+            sequence_order: i,
+            created_at: new Date().toISOString()
+          };
+          await window.db.createQuizQuestion(payload);
+        }
+        return { success:true, quiz };
+      } catch (e) { return { success:false, error: e.message || e };}
+    },
 
-  addQuestion() {
-    const idx = this.questions.length
-    this.questions.push({})
-
-    const container = document.createElement("div")
-    container.className = "question-editor"
-    container.innerHTML = `
-      <h4>Question ${idx + 1}</h4>
-      <label>English Text:</label>
-      <input type="text" id="q_${idx}_en" required>
-      <label>Punjabi Text:</label>
-      <input type="text" id="q_${idx}_pa">
-
-      <label>Type:</label>
-      <select id="q_${idx}_type" onchange="quizCreator.renderOptions(${idx})">
-        <option value="multiple_choice">Multiple Choice</option>
-        <option value="true_false">True/False</option>
-        <option value="short_answer">Short Answer</option>
-      </select>
-
-      <div id="q_${idx}_options"></div>
-      <label>Correct Answer:</label>
-      <input type="text" id="q_${idx}_correct" required>
-      <label>Marks:</label>
-      <input type="number" id="q_${idx}_marks" value="1" min="1">
-    `
-    document.getElementById("questionsList").appendChild(container)
-    this.renderOptions(idx)
-  }
-
-  renderOptions(idx) {
-    const type = document.getElementById(q_${idx}_type).value
-    const container = document.getElementById(q_${idx}_options)
-    if (type === "multiple_choice") {
+    renderQuickUI(container) {
+      if (!container) return;
       container.innerHTML = `
-        <label>Option A (English):</label>
-        <input type="text" id="q_${idx}_optA">
-        <label>Option A (Punjabi):</label>
-        <input type="text" id="q_${idx}_optA_pa">
-
-        <label>Option B (English):</label>
-        <input type="text" id="q_${idx}_optB">
-        <label>Option B (Punjabi):</label>
-        <input type="text" id="q_${idx}_optB_pa">
-
-        <label>Option C (English):</label>
-        <input type="text" id="q_${idx}_optC">
-        <label>Option C (Punjabi):</label>
-        <input type="text" id="q_${idx}_optC_pa">
-
-        <label>Option D (English):</label>
-        <input type="text" id="q_${idx}_optD">
-        <label>Option D (Punjabi):</label>
-        <input type="text" id="q_${idx}_optD_pa">
-      `
-    } else {
-      container.innerHTML = ""
-    }
-  }
-
-  async submitQuiz() {
-    try {
-      const quiz = {
-        title: document.getElementById("quizTitle").value,
-        title_punjabi: document.getElementById("quizTitlePunjabi").value,
-        description: document.getElementById("quizDescription").value,
-        description_punjabi: document.getElementById("quizDescriptionPunjabi").value,
-        teacher_id: authManager.getCurrentUser().id,
-        course_id: document.getElementById("quizCourse").value,
-        time_limit_minutes: parseInt(document.getElementById("quizTimeLimit").value),
-        total_marks: 0
+        <form id="qc_form">
+          <div><label>Quiz title</label><input id="qc_title" style="width:100%;padding:.4rem" required /></div>
+          <div style="margin-top:.4rem"><label>Description</label><textarea id="qc_desc" style="width:100%;padding:.4rem"></textarea></div>
+          <div style="margin-top:.4rem"><label>Time limit (minutes)</label><input id="qc_time" type="number" value="30" style="width:120px;padding:.4rem" /></div>
+          <h4 style="margin-top:.6rem">Questions</h4>
+          <div id="qc_qs"></div>
+          <div style="margin-top:.4rem"><button type="button" id="qc_add">Add question</button></div>
+          <div style="margin-top:.6rem"><button class="btn" type="submit">Create Quiz</button></div>
+          <div id="qc_feedback" style="margin-top:.5rem"></div>
+        </form>
+      `;
+      const qs = container.querySelector('#qc_qs');
+      function addQ() {
+        const wrapper = document.createElement('div');
+        wrapper.style = 'padding:.5rem;border:1px solid #eee;margin-bottom:.6rem';
+        wrapper.innerHTML = `
+          <div><input class="q_text" placeholder="Question text" style="width:100%;padding:.3rem" /></div>
+          <div style="margin-top:.3rem">
+            <select class="q_type">
+              <option value="multiple_choice">Multiple choice</option>
+              <option value="true_false">True/False</option>
+              <option value="short_answer">Short answer</option>
+            </select>
+          </div>
+          <div style="margin-top:.3rem"><textarea class="q_options" placeholder='{"A":"Option 1","B":"Option 2"}' style="width:100%;height:60px"></textarea></div>
+          <div style="margin-top:.3rem">
+            <input class="q_correct" placeholder="Correct answer (e.g. B or true)" />
+            <input class="q_marks" type="number" value="1" style="width:80px;margin-left:.6rem" />
+            <button type="button" class="q_remove" style="margin-left:.6rem">Remove</button>
+          </div>
+        `;
+        wrapper.querySelector('.q_remove').addEventListener('click', ()=>wrapper.remove());
+        qs.appendChild(wrapper);
       }
+      addQ();
+      container.querySelector('#qc_add').addEventListener('click', addQ);
 
-      const { data: quizRow, error: quizError } = await supabaseClient
-        .from("quizzes")
-        .insert([quiz])
-        .select()
-        .single()
-
-      if (quizError) throw quizError
-
-      // Insert questions
-      let totalMarks = 0
-      for (let i = 0; i < this.questions.length; i++) {
-        const qType = document.getElementById(q_${i}_type).value
-        const marks = parseInt(document.getElementById(q_${i}_marks).value)
-
-        const question = {
-          quiz_id: quizRow.id,
-          question_text: document.getElementById(q_${i}_en).value,
-          question_text_punjabi: document.getElementById(q_${i}_pa).value,
-          question_type: qType,
-          correct_answer: document.getElementById(q_${i}_correct).value,
-          marks,
-          sequence_order: i,
-          options: {}
-        }
-
-        if (qType === "multiple_choice") {
-          question.options = {
-            A: document.getElementById(q_${i}_optA).value,
-            A_pa: document.getElementById(q_${i}_optA_pa).value,
-            B: document.getElementById(q_${i}_optB).value,
-            B_pa: document.getElementById(q_${i}_optB_pa).value,
-            C: document.getElementById(q_${i}_optC).value,
-            C_pa: document.getElementById(q_${i}_optC_pa).value,
-            D: document.getElementById(q_${i}_optD).value,
-            D_pa: document.getElementById(q_${i}_optD_pa).value
-          }
-        }
-
-        const { error: qError } = await supabaseClient.from("quiz_questions").insert([question])
-        if (qError) throw qError
-        totalMarks += marks
-      }
-
-      // Update quiz total marks
-      await supabaseClient.from("quizzes").update({ total_marks: totalMarks }).eq("id", quizRow.id)
-
-      alert("✅ Quiz created successfully")
-      document.getElementById("createQuizModal").style.display = "none"
-      this.questions = []
-      document.getElementById("questionsList").innerHTML = ""
-    } catch (err) {
-      console.error("Quiz create error:", err)
-      alert("❌ Could not create quiz")
+      container.querySelector('#qc_form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const title = container.querySelector('#qc_title').value.trim();
+        const desc = container.querySelector('#qc_desc').value.trim();
+        const time = parseInt(container.querySelector('#qc_time').value,10) || 30;
+        const qBlocks = Array.from(qs.querySelectorAll('div'));
+        const questions = qBlocks.map((b) => {
+          let opts = {};
+          try { opts = JSON.parse(b.querySelector('.q_options').value || '{}'); } catch {}
+          return {
+            question_text: b.querySelector('.q_text').value || '',
+            question_type: b.querySelector('.q_type').value,
+            options: opts,
+            correct_answer: b.querySelector('.q_correct').value || '',
+            marks: parseInt(b.querySelector('.q_marks').value,10) || 1
+          };
+        });
+        const total_marks = questions.reduce((s,q)=>s+(q.marks||1),0);
+        const fb = container.querySelector('#qc_feedback');
+        fb.textContent = 'Creating...';
+        const resp = await QuizCreator.createQuizWithQuestions({ title, description: desc, time_limit_minutes: time, total_marks }, questions);
+        if (resp.success) { fb.style.color='green'; fb.textContent = 'Quiz created'; e.target.reset(); qs.innerHTML=''; addQ(); }
+        else { fb.style.color='red'; fb.textContent = 'Error: ' + (resp.error || 'unknown'); }
+      });
     }
-  }
-}
+  };
 
-window.quizCreator = new QuizCreator()
+  window.QuizCreator = QuizCreator;
+})();
+</script>
