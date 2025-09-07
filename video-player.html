@@ -8,11 +8,12 @@
   <script src="js/supabase.js"></script>
   <script src="js/auth.js"></script>
   <style>
-    body{font-family:Arial;margin:0;background:#111;color:#fff}
-    .top{display:flex;justify-content:space-between;align-items:center;padding:1rem;background:#222}
-    .wrap{max-width:1100px;margin:2rem auto;padding:1rem;background:#000;border-radius:8px}
-    .controls{display:flex;gap:.6rem;align-items:center;margin-top:.6rem}
-    .transcript{background:#fff;color:#111;padding:1rem;border-radius:6px;margin-top:.6rem;max-height:320px;overflow:auto}
+    body { font-family: Arial; margin:0; background:#111; color:#fff; }
+    .top { display:flex; justify-content:space-between; align-items:center; padding:1rem; background:#222; }
+    .wrap { max-width:1100px; margin:2rem auto; padding:1rem; background:#000; border-radius:8px; }
+    .video-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 1rem; }
+    .controls { display:flex; gap:.6rem; align-items:center; margin-top:.6rem; }
+    .transcript { background:#fff; color:#111; padding:1rem; border-radius:6px; margin-top:.6rem; max-height:320px; overflow:auto; }
   </style>
 </head>
 <body>
@@ -23,55 +24,61 @@
   </div>
 
   <div class="wrap">
-    <div id="media"></div>
+    <!-- ✅ Video title shown here -->
+    <div id="videoName" class="video-title">Loading...</div>
 
+    <div id="media"></div>
     <div class="controls">
       <button id="fullscreen">Fullscreen</button>
       <label style="margin-left:8px"><input type="checkbox" id="showTranscript"/> Show Transcript</label>
-      <select id="lang" style="margin-left:6px"><option value="en">English</option><option value="pa">Punjabi</option></select>
+      <select id="lang" style="margin-left:6px">
+        <option value="en">English</option>
+        <option value="pa">Punjabi</option>
+      </select>
     </div>
-
     <div id="transcript" class="transcript" style="display:none"></div>
   </div>
 
   <script>
-    (async ()=>{
-      await new Promise(r=>setTimeout(r,200));
+    (async () => {
       const qs = new URLSearchParams(location.search);
       const id = qs.get('id');
       if (!id) { alert('No video id'); location.href='student-dashboard.html'; return; }
-      const { data: video, error } = await window.db.getVideo(id);
-      if (error || !video) { alert('Video not found'); location.href='student-dashboard.html'; return; }
 
-      document.getElementById('title').textContent = video.title || '';
+      let video;
+      try {
+        const res = await window.db.getVideo(id);
+        video = res.data || res;
+      } catch (err) {
+        alert('Video not found'); location.href='student-dashboard.html'; return;
+      }
+
+      // ✅ Show name in both header & main section
+      document.getElementById('title').textContent = video.title || 'Video';
+      document.getElementById('videoName').textContent = video.title || 'Video';
+
       const media = document.getElementById('media');
-
-      // If YouTube URL, embed iframe; else use native video
       const url = (video.video_url || '').trim();
+
+      // YouTube or native video
       let nativeVideo = null;
-      if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        // basic extraction
-        const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/);
-        const yid = m ? m[1] : null;
-        if (yid) {
-          const iframe = document.createElement('iframe');
-          iframe.width = '100%'; iframe.height = '480';
-          iframe.src = https://www.youtube.com/embed/${yid};
-          iframe.frameBorder=0; iframe.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-          media.appendChild(iframe);
-        } else {
-          media.innerHTML = '<p>Cannot parse YouTube URL</p>';
-        }
+      const ytMatch = url.match(/(?:youtube\.com\/.*v=|youtu\.be\/)([0-9A-Za-z_-]{11})/);
+      if (ytMatch) {
+        const yid = ytMatch[1];
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%'; iframe.height = '480';
+        iframe.src = https://www.youtube.com/embed/${yid};
+        iframe.allowFullscreen = true;
+        media.appendChild(iframe);
       } else {
         nativeVideo = document.createElement('video');
         nativeVideo.src = url;
         nativeVideo.controls = true;
         nativeVideo.style.width = '100%';
-        nativeVideo.id = 'nativeVideo';
         media.appendChild(nativeVideo);
       }
 
-      // Transcript toggle
+      // Transcript handling
       const transcriptDiv = document.getElementById('transcript');
       const showCheckbox = document.getElementById('showTranscript');
       const langSelect = document.getElementById('lang');
@@ -81,7 +88,7 @@
         const text = (lang === 'pa' ? video.transcript_pa : video.transcript_en) || video.transcript || 'No transcript available';
         transcriptDiv.innerHTML = <pre style="white-space:pre-wrap">${text}</pre>;
       }
-      showCheckbox.addEventListener('change', ()=> transcriptDiv.style.display = showCheckbox.checked ? 'block' : 'none');
+      showCheckbox.addEventListener('change', () => transcriptDiv.style.display = showCheckbox.checked ? 'block' : 'none');
       langSelect.addEventListener('change', renderTranscript);
       renderTranscript();
 
@@ -94,36 +101,15 @@
       // Save progress for native video
       if (nativeVideo) {
         nativeVideo.addEventListener('timeupdate', async ()=>{
-          try {
+          if (window.db && window.db.upsertVideoProgress && window.authManager?.currentUser) {
             await window.db.upsertVideoProgress({
               video_id: id,
               student_id: window.authManager.currentUser.id,
               progress_seconds: Math.floor(nativeVideo.currentTime),
               last_watched: new Date().toISOString(),
             });
-          } catch(e){}
-        });
-        nativeVideo.addEventListener('ended', async ()=>{
-          try {
-            await window.db.upsertVideoProgress({
-              video_id: id,
-              student_id: window.authManager.currentUser.id,
-              progress_seconds: video.duration_seconds || 0,
-              completed: true,
-              last_watched: new Date().toISOString()
-            });
-          } catch(e){}
-        });
-
-        // Optionally resume from previous progress
-        const { data: progress } = await window.supabaseClient.from('video_progress').select('*').eq('video_id', id).eq('student_id', window.authManager.currentUser.id).single();
-        if (progress && progress.progress_seconds > 10) {
-          if (confirm(Resume from ${Math.floor(progress.progress_seconds/60)}:${String(progress.progress_seconds%60).padStart(2,'0')}?)) {
-            nativeVideo.currentTime = progress.progress_seconds;
           }
-        }
-      } else {
-        // With YouTube iframe, you would add IFrame API integration to track progress — out of scope for minimal implementation
+        });
       }
     })();
   </script>
