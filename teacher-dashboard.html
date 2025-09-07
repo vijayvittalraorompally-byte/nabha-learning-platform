@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Dashboard - Digital Learning</title>
+    <title>Student Dashboard - Digital Learning</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -11,7 +11,7 @@
 <body>
     <nav class="navbar">
         <div class="nav-content">
-            <h1 class="nav-title">👨‍🏫 Teacher Dashboard</h1>
+            <h1 class="nav-title">📚 Student Dashboard</h1>
             <div class="nav-actions">
                 <div class="online-indicator" id="onlineStatus">
                     <span class="status-dot online"></span>
@@ -28,367 +28,175 @@
     <div class="dashboard-container">
         <aside class="sidebar">
             <div class="user-profile" id="userProfile">
-                <div class="profile-avatar">👨‍🏫</div>
+                <div class="profile-avatar">👤</div>
                 <div class="profile-info">
                     <h3 id="userName">Loading...</h3>
-                    <p id="userSchool">School</p>
+                    <p id="userGrade">Grade -</p>
                 </div>
             </div>
 
             <nav class="sidebar-nav">
-                <a href="#overview" class="nav-link active" data-section="overview">
-                    📊 Overview
+                <a href="#courses" class="nav-link active" data-section="courses">
+                    📖 My Courses
                 </a>
-                <a href="#students" class="nav-link" data-section="students">
-                    👨‍🎓 Students
+                <a href="#videos" class="nav-link" data-section="videos">
+                    🎥 Videos
                 </a>
-                <a href="#my-videos" class="nav-link" data-section="my-videos">
-                    🎥 My Videos
+                <a href="#quizzes" class="nav-link" data-section="quizzes">
+                    📝 Quizzes
                 </a>
-                <a href="#my-quizzes" class="nav-link" data-section="my-quizzes">
-                    📝 My Quizzes
+                <a href="#progress" class="nav-link" data-section="progress">
+                    📊 My Progress
                 </a>
-                <a href="#analytics" class="nav-link" data-section="analytics">
-                    📈 Analytics
-                </a>
-                <a href="#content" class="nav-link" data-section="content">
-                    ➕ Create Content
+                <a href="#assignments" class="nav-link" data-section="assignments">
+                    📋 Assignments
                 </a>
             </nav>
         </aside>
 
         <main class="main-content">
-            <!-- Overview Section -->
-            <section id="overview" class="content-section active">
+            <!-- Courses Section -->
+            <section id="courses" class="content-section active">
                 <div class="section-header">
-                    <h2>📊 Teaching Overview</h2>
-                    <div class="date-filter">
-                        <input type="date" id="dateFrom" value="">
-                        <span>to</span>
-                        <input type="date" id="dateTo" value="">
-                        <button onclick="updateAnalytics()">Update</button>
+                    <h2>📖 My Courses</h2>
+                    <div class="search-box">
+                        <input type="text" placeholder="Search courses..." id="courseSearch">
+                        <button onclick="searchCourses()">🔍</button>
                     </div>
                 </div>
-
+                
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-icon">👨‍🎓</div>
-                        <div class="stat-info">
-                            <h3 id="totalStudents">0</h3>
-                            <p>Total Students</p>
-                        </div>
+                        <h3 id="totalCourses">0</h3>
+                        <p>Total Courses</p>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">🎥</div>
-                        <div class="stat-info">
-                            <h3 id="totalVideos">0</h3>
-                            <p>Videos Uploaded</p>
-                        </div>
+                        <h3 id="completedCourses">0</h3>
+                        <p>Completed</p>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">📝</div>
-                        <div class="stat-info">
-                            <h3 id="totalQuizzes">0</h3>
-                            <p>Quizzes Created</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📊</div>
-                        <div class="stat-info">
-                            <h3 id="avgEngagement">0%</h3>
-                            <p>Avg Engagement</p>
-                        </div>
+                        <h3 id="inProgressCourses">0</h3>
+                        <p>In Progress</p>
                     </div>
                 </div>
 
-                <div class="overview-charts">
-                    <div class="chart-container">
-                        <h3>Student Activity (Last 7 Days)</h3>
-                        <canvas id="activityChart" width="400" height="200"></canvas>
-                    </div>
-                    <div class="recent-actions">
-                        <h3>Recent Actions</h3>
-                        <div id="recentActions">
-                            <!-- Recent actions will be loaded here -->
-                        </div>
-                    </div>
+                <div class="course-grid" id="courseGrid">
+                    <!-- Courses will be loaded here -->
                 </div>
             </section>
 
-            <!-- Students Section -->
-            <section id="students" class="content-section">
+            <!-- Videos Section -->
+            <section id="videos" class="content-section">
                 <div class="section-header">
-                    <h2>👨‍🎓 My Students</h2>
-                    <div class="student-filters">
-                        <select id="gradeFilter">
-                            <option value="all">All Grades</option>
-                            <option value="6">Grade 6</option>
-                            <option value="7">Grade 7</option>
-                            <option value="8">Grade 8</option>
-                            <option value="9">Grade 9</option>
-                            <option value="10">Grade 10</option>
-                        </select>
-                        <select id="statusFilter">
-                            <option value="all">All Status</option>
-                            <option value="online">Online</option>
-                            <option value="offline">Offline</option>
+                    <h2>🎥 Educational Videos</h2>
+                    <select id="videoFilter">
+                        <option value="all">All Videos</option>
+                        <option value="watched">Watched</option>
+                        <option value="unwatched">Not Watched</option>
+                    </select>
+                </div>
+
+                <div class="video-grid" id="videoGrid">
+                    <!-- Videos will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Quizzes Section -->
+            <section id="quizzes" class="content-section">
+                <div class="section-header">
+                    <h2>📝 Available Quizzes</h2>
+                    <div class="quiz-filters">
+                        <select id="quizFilter">
+                            <option value="all">All Quizzes</option>
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="students-grid" id="studentsGrid">
-                    <!-- Students will be loaded here -->
+                <div class="quiz-grid" id="quizGrid">
+                    <!-- Quizzes will be loaded here -->
                 </div>
             </section>
 
-            <!-- My Videos Section -->
-            <section id="my-videos" class="content-section">
+            <!-- Progress Section -->
+            <section id="progress" class="content-section">
                 <div class="section-header">
-                    <h2>🎥 My Videos</h2>
-                    <button class="btn primary" onclick="showUploadVideo()">
-                        ➕ Upload Video
-                    </button>
+                    <h2>📊 My Learning Progress</h2>
                 </div>
 
-                <div class="videos-list" id="myVideosList">
-                    <!-- Teacher's videos will be loaded here -->
-                </div>
-            </section>
-
-            <!-- My Quizzes Section -->
-            <section id="my-quizzes" class="content-section">
-                <div class="section-header">
-                    <h2>📝 My Quizzes</h2>
-                    <button class="btn primary" onclick="showCreateQuiz()">
-                        ➕ Create Quiz
-                    </button>
-                </div>
-
-                <div class="quizzes-list" id="myQuizzesList">
-                    <!-- Teacher's quizzes will be loaded here -->
-                </div>
-            </section>
-
-            <!-- Analytics Section -->
-            <section id="analytics" class="content-section">
-                <div class="section-header">
-                    <h2>📈 Detailed Analytics</h2>
-                </div>
-
-                <div class="analytics-tabs">
-                    <button class="tab-btn active" data-tab="video-analytics">Video Analytics</button>
-                    <button class="tab-btn" data-tab="quiz-analytics">Quiz Analytics</button>
-                    <button class="tab-btn" data-tab="student-performance">Student Performance</button>
-                </div>
-
-                <div class="analytics-content">
-                    <div id="video-analytics" class="analytics-tab active">
-                        <div class="analytics-grid">
-                            <div class="analytics-chart">
-                                <h4>Video Views Over Time</h4>
-                                <canvas id="videoViewsChart"></canvas>
-                            </div>
-                            <div class="analytics-metrics">
-                                <h4>Top Performing Videos</h4>
-                                <div id="topVideos">
-                                    <!-- Top videos will be loaded here -->
-                                </div>
-                            </div>
-                        </div>
+                <div class="progress-overview">
+                    <div class="progress-chart">
+                        <canvas id="progressChart" width="400" height="200"></canvas>
                     </div>
                     
-                    <div id="quiz-analytics" class="analytics-tab">
-                        <div class="analytics-grid">
-                            <div class="analytics-chart">
-                                <h4>Quiz Performance</h4>
-                                <canvas id="quizPerformanceChart"></canvas>
+                    <div class="progress-details">
+                        <div class="progress-item">
+                            <h4>Overall Progress</h4>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="overallProgress" style="width: 0%"></div>
                             </div>
-                            <div class="analytics-metrics">
-                                <h4>Quiz Statistics</h4>
-                                <div id="quizStats">
-                                    <!-- Quiz stats will be loaded here -->
-                                </div>
-                            </div>
+                            <span id="overallPercentage">0%</span>
                         </div>
-                    </div>
-                    
-                    <div id="student-performance" class="analytics-tab">
-                        <div class="performance-grid">
-                            <div class="performance-overview">
-                                <h4>Class Performance Overview</h4>
-                                <div id="classPerformance">
-                                    <!-- Class performance will be loaded here -->
-                                </div>
-                            </div>
-                            <div class="individual-performance">
-                                <h4>Individual Student Progress</h4>
-                                <div id="studentProgress">
-                                    <!-- Individual progress will be loaded here -->
-                                </div>
+                        
+                        <div class="recent-activities">
+                            <h4>Recent Activities</h4>
+                            <div id="recentActivities">
+                                <!-- Activities will be loaded here -->
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Create Content Section -->
-            <section id="content" class="content-section">
+            <!-- Assignments Section -->
+            <section id="assignments" class="content-section">
                 <div class="section-header">
-                    <h2>➕ Create New Content</h2>
+                    <h2>📋 Assignments</h2>
                 </div>
 
-                <div class="content-creation-options">
-                    <div class="creation-card" onclick="showUploadVideo()">
-                        <div class="creation-icon">🎥</div>
-                        <h3>Upload Video</h3>
-                        <p>Add educational videos for your students</p>
-                    </div>
-                    
-                    <div class="creation-card" onclick="showCreateQuiz()">
-                        <div class="creation-icon">📝</div>
-                        <h3>Create Quiz</h3>
-                        <p>Design quizzes to test student knowledge</p>
-                    </div>
-                    
-                    <div class="creation-card" onclick="showCreateAssignment()">
-                        <div class="creation-icon">📋</div>
-                        <h3>Create Assignment</h3>
-                        <p>Assign tasks and projects to students</p>
-                    </div>
+                <div class="assignment-tabs">
+                    <button class="tab-btn active" data-tab="pending">Pending</button>
+                    <button class="tab-btn" data-tab="submitted">Submitted</button>
+                    <button class="tab-btn" data-tab="graded">Graded</button>
                 </div>
 
-                <!-- Quick Video Upload Form -->
-                <div class="quick-upload" id="quickUpload" style="display: none;">
-                    <h3>Quick Video Upload</h3>
-                    <form id="quickVideoForm">
-                        <div class="form-group">
-                            <label>Video Title:</label>
-                            <input type="text" id="quickVideoTitle" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Video URL (YouTube/Google Drive):</label>
-                            <input type="url" id="quickVideoUrl" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Course:</label>
-                            <select id="quickVideoCourse" required>
-                                <!-- Courses will be loaded here -->
-                            </select>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn primary">Upload</button>
-                            <button type="button" onclick="hideQuickUpload()" class="btn secondary">Cancel</button>
-                        </div>
-                    </form>
+                <div class="assignment-list" id="assignmentList">
+                    <!-- Assignments will be loaded here -->
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- Upload Video Modal -->
-    <div class="modal" id="uploadVideoModal">
-        <div class="modal-content">
-            <span class="close" onclick="closeUploadModal()">&times;</span>
-            <h2>Upload New Video</h2>
-            <form id="uploadVideoForm">
-                <div class="form-group">
-                    <label>Video Title:</label>
-                    <input type="text" id="videoTitle" required>
-                    <input type="text" id="videoTitlePunjabi" placeholder="Title in Punjabi">
-                </div>
-                <div class="form-group">
-                    <label>Description:</label>
-                    <textarea id="videoDescription" rows="3"></textarea>
-                    <textarea id="videoDescriptionPunjabi" rows="3" placeholder="Description in Punjabi"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Video Source:</label>
-                    <select id="videoSource" onchange="toggleVideoInput()">
-                        <option value="youtube">YouTube URL</option>
-                        <option value="drive">Google Drive URL</option>
-                        <option value="upload">Upload File</option>
-                    </select>
-                </div>
-                <div class="form-group" id="urlInput">
-                    <label>Video URL:</label>
-                    <input type="url" id="videoUrl">
-                </div>
-                <div class="form-group" id="fileInput" style="display: none;">
-                    <label>Upload Video File:</label>
-                    <input type="file" id="videoFile" accept="video/*">
-                    <div class="upload-progress" id="uploadProgress" style="display: none;">
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="uploadProgressBar"></div>
-                        </div>
-                        <span id="uploadProgressText">0%</span>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Course:</label>
-                    <select id="videoCourse" required>
-                        <!-- Courses will be loaded here -->
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Duration (minutes):</label>
-                    <input type="number" id="videoDuration" min="1">
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn primary">
-                        <span id="uploadBtnText">Upload Video</span>
-                        <div class="loading" id="uploadLoader" style="display: none;"></div>
-                    </button>
-                    <button type="button" onclick="closeUploadModal()" class="btn secondary">Cancel</button>
-                </div>
-            </form>
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <button onclick="toggleNotifications()">×</button>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <!-- Notifications will be loaded here -->
         </div>
     </div>
 
-    <!-- Create Quiz Modal -->
-    <div class="modal" id="createQuizModal">
-        <div class="modal-content quiz-modal">
-            <span class="close" onclick="closeQuizModal()">&times;</span>
-            <h2>Create New Quiz</h2>
-            <form id="createQuizForm">
-                <div class="quiz-basic-info">
-                    <div class="form-group">
-                        <label>Quiz Title:</label>
-                        <input type="text" id="quizTitle" required>
-                        <input type="text" id="quizTitlePunjabi" placeholder="Title in Punjabi">
+    <!-- Video Player Modal -->
+    <div class="modal" id="videoModal">
+        <div class="modal-content video-modal-content">
+            <span class="close" onclick="closeVideoModal()">&times;</span>
+            <video id="videoPlayer" controls width="100%" height="400">
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <div class="video-info">
+                <h3 id="videoTitle"></h3>
+                <p id="videoDescription"></p>
+                <div class="video-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="videoProgress"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Description:</label>
-                        <textarea id="quizDescription" rows="2"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label>Course:</label>
-                            <select id="quizCourse" required>
-                                <!-- Courses will be loaded here -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Time Limit (minutes):</label>
-                            <input type="number" id="quizTimeLimit" value="30" min="5" max="180">
-                        </div>
-                    </div>
+                    <span id="videoProgressText">0%</span>
                 </div>
-
-                <div class="quiz-questions" id="quizQuestions">
-                    <div class="questions-header">
-                        <h3>Questions</h3>
-                        <button type="button" onclick="addQuestion()" class="btn secondary">Add Question</button>
-                    </div>
-                    <div id="questionsList">
-                        <!-- Questions will be added here -->
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn primary">Create Quiz</button>
-                    <button type="button" onclick="closeQuizModal()" class="btn secondary">Cancel</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -398,12 +206,5 @@
     <script src="js/real-time.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/video-handler.js"></script>
-    <script src="js/quiz-handler.js"></script>
-    <script>
-        // Initialize teacher dashboard
-        document.addEventListener('DOMContentLoaded', async function() {
-            await initializeTeacherDashboard();
-        });
-    </script>
 </body>
 </html>
