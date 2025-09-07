@@ -1,239 +1,132 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Login - Nabha Learning</title>
+  <link rel="stylesheet" href="css/dashboard.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-      padding: 1rem;
-    }
-    .login-container {
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.18);
-    }
-    .form-group { margin-bottom: 1rem; }
-    label { display:block; margin-bottom:0.5rem; font-weight:600; color:#333; }
-    input, select {
-      width:100%; padding:0.8rem; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;
-      font-size:1rem;
-    }
-    input:focus, select:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,0.12); }
-    .btn {
-      width:100%; padding:1rem; background:#667eea; color:white; border:none; border-radius:6px; cursor:pointer;
-      font-size:1rem;
-    }
-    .btn:disabled { background:#999; cursor:not-allowed; }
-    .toggle-link { color:#667eea; cursor:pointer; text-decoration:underline; }
-    .message { padding:1rem; margin-top:1rem; border-radius:6px; text-align:center; display:none; }
-    .success{ background:#d4edda; color:#155724; border:1px solid #c3e6cb; display:block; }
-    .error{ background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; display:block; }
-    #signupFields { display:none; }
-    .loading { display:none; text-align:center; color:#667eea; margin-bottom:1rem; }
-    .spinner {
-      border:3px solid #f3f3f3; border-top:3px solid #667eea; border-radius:50%; width:20px; height:20px;
-      animation:spin 1s linear infinite; display:inline-block; vertical-align:middle; margin-right:8px;
-    }
-    @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+    .card { max-width:420px;margin:3rem auto;padding:1.5rem;border-radius:10px;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,0.06); }
+    body { background:#f6f8fb; font-family:Arial,Helvetica,sans-serif; color:#222; }
+    .btn { padding:.6rem 1rem;border:none;border-radius:8px;cursor:pointer; }
+    .btn.primary { background:#667eea;color:#fff; }
+    .input { width:100%;padding:.6rem;border:1px solid #ddd;border-radius:6px;margin-bottom:.8rem; }
+    .small { font-size:.9rem;color:#666;margin-top:.5rem; }
+    .error { color:#b91c1c;margin-top:.6rem; }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h2 style="text-align:center; margin-bottom:1.25rem;">📚 Nabha Learning</h2>
+  <div class="card">
+    <h2 style="margin-top:0">Sign in / Sign up</h2>
 
-    <div class="loading" id="loading"><span class="spinner"></span>Processing...</div>
+    <div id="message" class="small">Enter email and password</div>
+    <div id="error" class="error" style="display:none"></div>
 
-    <form id="authForm">
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input id="email" type="email" required />
-      </div>
+    <label>Email</label>
+    <input id="email" class="input" type="email" placeholder="you@example.com" />
 
-      <div class="form-group">
-        <label for="password">Password</label>
-        <input id="password" type="password" required minlength="6" />
-      </div>
+    <label>Password</label>
+    <input id="password" class="input" type="password" placeholder="Choose a secure password" />
 
-      <div id="signupFields">
-        <div class="form-group">
-          <label for="name">Full name</label>
-          <input id="name" type="text" />
-        </div>
+    <div style="display:flex;gap:.5rem;margin-top:.5rem;">
+      <button id="signInBtn" class="btn primary">Sign In</button>
+      <button id="signUpBtn" class="btn" style="background:#eee">Sign Up</button>
+    </div>
 
-        <div class="form-group">
-          <label for="role">Role</label>
-          <select id="role">
-            <option value="">Select role</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="school_name">School name</label>
-          <input id="school_name" type="text" />
-        </div>
-
-        <div class="form-group">
-          <label for="grade_level">Grade level</label>
-          <select id="grade_level">
-            <option value="">(optional)</option>
-            <option value="6">Class 6</option>
-            <option value="7">Class 7</option>
-            <option value="8">Class 8</option>
-            <option value="9">Class 9</option>
-            <option value="10">Class 10</option>
-          </select>
-        </div>
-      </div>
-
-      <button id="submitBtn" class="btn" type="submit">Login</button>
-    </form>
-
-    <p style="text-align:center; margin-top:1rem;">
-      <span id="switchText">Don't have an account?</span>
-      <span class="toggle-link" id="toggleLink"> Sign Up</span>
-    </p>
-
-    <div id="message" class="message"></div>
+    <div class="small" style="margin-top:1rem">
+      After sign up you will be redirected to the dashboard. Check console for debug logs.
+    </div>
   </div>
 
-  <!-- Supabase client -->
+  <!-- scripts (order matters) -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/auth.js"></script>
+
   <script>
-    const SUPABASE_URL = 'https://vrmcjijthmfzlfqqhqvh.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybWNqaWp0aG1memxmcXFocXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDIzMDQsImV4cCI6MjA3MjcxODMwNH0.dnose_pvGlKlE4OO4NojCFiR0DATKoRYlFm4qbm_GpM'; // replace with your key
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    (function () {
+      const emailInput = document.getElementById('email');
+      const passInput = document.getElementById('password');
+      const signInBtn = document.getElementById('signInBtn');
+      const signUpBtn = document.getElementById('signUpBtn');
+      const errorEl = document.getElementById('error');
+      const messageEl = document.getElementById('message');
 
-    const authForm = document.getElementById('authForm');
-    const toggleLink = document.getElementById('toggleLink');
-    const switchText = document.getElementById('switchText');
-    const signupFields = document.getElementById('signupFields');
-    const submitBtn = document.getElementById('submitBtn');
-    const loadingDiv = document.getElementById('loading');
-    const messageDiv = document.getElementById('message');
-
-    let isSignUp = false;
-
-    function showLoading() { loadingDiv.style.display = 'block'; authForm.style.display = 'none'; }
-    function hideLoading() { loadingDiv.style.display = 'none'; authForm.style.display = 'block'; }
-    function showMessage(text, type='error') {
-      messageDiv.textContent = text;
-      messageDiv.className = 'message ' + (type==='success'?'success':'error');
-      messageDiv.style.display = 'block';
-    }
-    function hideMessage() { messageDiv.style.display = 'none'; }
-
-    toggleLink.addEventListener('click', () => {
-      isSignUp = !isSignUp;
-      if (isSignUp) {
-        signupFields.style.display = 'block';
-        submitBtn.textContent = 'Sign Up';
-        switchText.textContent = 'Already have an account?';
-        toggleLink.textContent = ' Login';
-        document.getElementById('name').required = true;
-        document.getElementById('role').required = true;
-        document.getElementById('school_name').required = true;
-      } else {
-        signupFields.style.display = 'none';
-        submitBtn.textContent = 'Login';
-        switchText.textContent = "Don't have an account?";
-        toggleLink.textContent = ' Sign Up';
-        document.getElementById('name').required = false;
-        document.getElementById('role').required = false;
-        document.getElementById('school_name').required = false;
+      function showError(msg) {
+        errorEl.style.display = 'block';
+        errorEl.textContent = msg;
       }
-      hideMessage();
-    });
-
-    // Submit handler
-    authForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      hideMessage();
-
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-
-      if (!email || !password) {
-        showMessage('Please provide email and password', 'error'); return;
-      }
-      if (password.length < 6) {
-        showMessage('Password must be at least 6 characters', 'error'); return;
+      function clearError() {
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
       }
 
-      showLoading();
+      async function signup() {
+        clearError();
+        const email = emailInput.value.trim();
+        const password = passInput.value.trim();
+        if (!email || !password) { showError('Email and password required'); return; }
+        try {
+          messageEl.textContent = 'Signing up...';
+          const { data, error } = await window.supabaseClient.auth.signUp({
+            email, password
+          }, { redirectTo: window.location.origin + '/student-dashboard.html' });
 
-      try {
-        if (isSignUp) {
-          const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
-          if (authError) throw authError;
-
-          const newUserId = authData?.user?.id;
-          if (newUserId) {
-            const profileData = {
-              id: newUserId,
-              email,
-              full_name: document.getElementById('name').value.trim(),
-              role: document.getElementById('role').value,
-              school_name: document.getElementById('school_name').value.trim(),
-              grade_level: document.getElementById('grade_level').value || null
-            };
-            await supabaseClient.from('profiles').upsert(profileData, { onConflict: 'id' });
-            showMessage('Registration successful! Redirecting...', 'success');
-            setTimeout(() => redirectToDashboard(newUserId), 1000);
+          if (error) {
+            showError(error.message || 'Signup failed');
+            console.error('signup error', error);
+            messageEl.textContent = 'Enter email and password';
+            return;
           }
-        } else {
-          const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
-          if (authError) throw authError;
-          const userId = authData?.user?.id;
-          showMessage('Login successful! Redirecting...', 'success');
-          if (userId) setTimeout(() => redirectToDashboard(userId), 800);
+
+          // Signup is often "confirmation required" depending on Supabase settings.
+          messageEl.textContent = 'Check your email to confirm (if email confirmations enabled).';
+          console.log('signup result', data);
+        } catch (err) {
+          console.error(err);
+          showError(err.message || 'Signup failed');
+          messageEl.textContent = 'Enter email and password';
         }
-      } catch (err) {
-        showMessage('Error: ' + (err.message || err), 'error');
-      } finally {
-        hideLoading();
       }
-    });
 
-    // Redirect based on role
-    async function redirectToDashboard(userId) {
-      try {
-        const { data, error } = await supabaseClient.from('profiles').select('role').eq('id', userId).single();
-        if (error) throw error;
+      async function signin() {
+        clearError();
+        const email = emailInput.value.trim();
+        const password = passInput.value.trim();
+        if (!email || !password) { showError('Email and password required'); return; }
 
-        if (data?.role === 'teacher') {
-          window.location.href = 'teacher-dashboard.html';
-        } else if (data?.role === 'student') {
+        try {
+          messageEl.textContent = 'Signing in...';
+          const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) {
+            showError(error.message || 'Sign in failed');
+            console.error('signin error', error);
+            messageEl.textContent = 'Enter email and password';
+            return;
+          }
+
+          // Refresh authManager profile
+          if (window.authManager && typeof window.authManager._fetchProfile === 'function') {
+            try { await window.authManager._fetchProfile(); } catch(e){console.warn(e)}
+          }
+
+          console.log('signin result', data);
+          // redirect
           window.location.href = 'student-dashboard.html';
-        } else {
-          window.location.href = 'dashboard.html';
+        } catch (err) {
+          console.error(err);
+          showError(err.message || 'Sign in failed');
+          messageEl.textContent = 'Enter email and password';
         }
-      } catch (err) {
-        console.error('redirectToDashboard error:', err);
-        window.location.href = 'dashboard.html';
       }
-    }
 
-    // Auto-redirect if already logged in
-    window.addEventListener('load', async () => {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (user) {
-        showMessage('Already logged in, redirecting...', 'success');
-        setTimeout(() => redirectToDashboard(user.id), 800);
-      }
-    });
+      signUpBtn.addEventListener('click', signup);
+      signInBtn.addEventListener('click', signin);
+
+      // quick helper: prefill fields during dev (REMOVE in production)
+      // emailInput.value = 'student1@example.com';
+      // passInput.value = 'password123';
+    })();
   </script>
 </body>
 </html>
