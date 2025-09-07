@@ -1,198 +1,86 @@
-import { auth, db } from './supabase.js'
-
-class AuthManager {
-  constructor() {
-    this.currentUser = null
-    this.currentProfile = null
-    this.init()
+// js/auth.js (plain browser script)
+(function () {
+  if (!window.supabaseClient) {
+    console.error('auth.js: window.supabaseClient missing. Load js/supabase.js first.');
+    return;
   }
 
-  async init() {
-    // Check for existing session
-    const { data: { session } } = await auth.getSession()
-    if (session) {
-      await this.setCurrentUser(session.user)
-    }
+  const auth = window.supabaseClient.auth;
 
-    // Listen for auth changes
-    auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        await this.setCurrentUser(session.user)
-        this.redirectToDashboard()
-      } else if (event === 'SIGNED_OUT') {
-        this.currentUser = null
-        this.currentProfile = null
-        this.redirectToLogin()
-      }
-    })
+  function safeLog() {
+    if (console && console.log) console.log.apply(console, arguments);
   }
 
-  async setCurrentUser(user) {
-    this.currentUser = user
+  function AuthManager() {
+    this.currentUser = null;
+    this.currentProfile = null;
+    this.ready = false;
+    this._initPromise = this.init();
+  }
+
+  AuthManager.prototype.init = async function () {
     try {
-      this.currentProfile = await db.getProfile(user.id)
-    } catch (error) {
-      console.error('Error fetching profile:', error)
-    }
-  }
-
-  async signUp(email, password, fullName, role = 'student', schoolName, gradeLevel) {
-    try {
-      const { data, error } = await auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            role: role,
-            school_name: schoolName,
-            grade_level: gradeLevel
-          }
+      // get existing session
+      const { data } = await auth.getSession();
+      const session = data?.session ?? null;
+      if (session?.user) {
+        this.currentUser = session.user;
+        await this._fetchProfile();
+      } else {
+        // fallback: try getUser
+        const uu = await auth.getUser();
+        if (uu?.data?.user) {
+          this.currentUser = uu.data.user;
+          await this._fetchProfile();
         }
-      })
+      }
 
-      if (error) throw error
-
-      return { success: true, data }
-    } catch (error) {
-      console.error('Sign up error:', error)
-      return { success: false, error: error.message }
+      // listen to auth changes
+      auth.onAuthStateChange((event, session) => {
+        safeLog('auth event', event);
+        if (event === 'SIGNED_IN' && session?.user) {
+          this.currentUser = session.user;
+          this._fetchProfile().catch(e => console.error(e));
+        } else if (event === 'SIGNED_OUT') {
+          this.currentUser = null;
+          this.currentProfile = null;
+        }
+      });
+    } catch (err) {
+      console.error('AuthManager.init error', err);
+    } finally {
+      this.ready = true;
     }
-  }
+  };
 
-  async signIn(email, password) {
+  AuthManager.prototype._fetchProfile = async function () {
+    if (!this.currentUser) return;
     try {
-      const { data, error } = await auth.signInWithPassword({
-        email,
-        password
-      })
-
-      if (error) throw error
-
-      return { success: true, data }
-    } catch (error) {
-      console.error('Sign in error:', error)
-      return { success: false, error: error.message }
+      const { data, error } = await window.supabaseClient
+        .from('profiles') // change to 'profiles' if your project uses that table name
+        .select('*')
+        .eq('id', this.currentUser.id)
+        .single();
+      if (error && error.code !== 'PGRST116') {
+        console.warn('get profile error', error);
+      } else {
+        this.currentProfile = data ?? null;
+      }
+    } catch (e) {
+      console.error('fetch profile failed', e);
     }
-  }
+  };
 
-  async signOut() {
-    try {
-      const { error } = await auth.signOut()
-      if (error) throw error
-      return { success: true }
-    } catch (error) {
-      console.error('Sign out error:', error)
-      return { success: false, error: error.message }
-    }
-  }
+  AuthManager.prototype.waitUntilReady = function () {
+    if (this.ready) return Promise.resolve();
+    return this._initPromise;
+  };
 
-  async updateProfile(updates) {
-    if (!this.currentUser) {
-      throw new Error('No authenticated user')
-    }
+  AuthManager.prototype.getCurrentUser = function () { return this.currentUser; };
+  AuthManager.prototype.getProfile = function () { return this.currentProfile; };
+  AuthManager.prototype.signOut = async function () { await auth.signOut(); this.currentUser = null; this.currentProfile = null; };
 
-    try {
-      this.currentProfile = await db.updateProfile(this.currentUser.id, updates)
-      return { success: true, profile: this.currentProfile }
-    } catch (error) {
-      console.error('Profile update error:', error)
-      return { success: false, error: error.message }
-    }
-  }
-
-  isAuthenticated() {
-    return !!this.currentUser
-  }
-
-  isTeacher() {
-    return this.currentProfile?.role === 'teacher'
-  }
-
-  isStudent() {
-    return this.currentProfile?.role === 'student'
-  }
-
-  getCurrentUser() {
-    return this.currentUser
-  }
-
-  getCurrentProfile() {
-    return this.currentProfile
-  }
-
-  requireAuth() {
-    if (!this.isAuthenticated()) {
-      this.redirectToLogin()
-      return false
-    }
-    return true
-  }
-
-  requireTeacher() {
-    if (!this.requireAuth()) return false
-    
-    if (!this.isTeacher()) {
-      // Use custom message box instead of alert()
-      console.error('Access denied. Teacher role required.')
-      this.redirectToDashboard()
-      return false
-    }
-    return true
-  }
-
-  requireStudent() {
-    if (!this.requireAuth()) return false
-    
-    if (!this.isStudent()) {
-      // Use custom message box instead of alert()
-      console.error('Access denied. Student role required.')
-      this.redirectToDashboard()
-      return false
-    }
-    return true
-  }
-
-  redirectToLogin() {
-    if (!window.location.pathname.includes('login.html') && 
-        !window.location.pathname.includes('index.html')) {
-      window.location.href = 'login.html'
-    }
-  }
-
-  redirectToDashboard() {
-    if (this.isTeacher()) {
-      window.location.href = 'teacher-dashboard.html'
-    } else if (this.isStudent()) {
-      window.location.href = 'student-dashboard.html'
-    } else {
-      window.location.href = 'dashboard.html'
-    }
-  }
-
-  // Utility method to get user initials for avatar
-  getUserInitials() {
-    if (!this.currentProfile?.full_name) {
-      return this.currentUser?.email?.charAt(0).toUpperCase() || 'U'
-    }
-    
-    const names = this.currentProfile.full_name.split(' ')
-    return names.length >= 2 
-      ? (names[0].charAt(0) + names[1].charAt(0)).toUpperCase()
-      : names[0].charAt(0).toUpperCase()
-  }
-
-  // Format user display name
-  getDisplayName() {
-    return this.currentProfile?.full_name || 
-           this.currentUser?.email || 
-           'User'
-  }
-}
-
-// Create global auth manager instance
-const authManager = new AuthManager()
-
-// Export both the class and instance for flexibility
-export { AuthManager }
-export default authManager
+  // expose global
+  window.authManager = new AuthManager();
+  safeLog('auth.js initialized');
+})();
