@@ -57,7 +57,7 @@
     if (!this.currentUser) return;
     try {
       const { data, error } = await window.supabaseClient
-        .from('profiles') // change to 'profiles' if your project uses that table name
+        .from('profiles') // change if your table name differs
         .select('*')
         .eq('id', this.currentUser.id)
         .single();
@@ -78,9 +78,23 @@
 
   AuthManager.prototype.getCurrentUser = function () { return this.currentUser; };
   AuthManager.prototype.getProfile = function () { return this.currentProfile; };
-  AuthManager.prototype.signOut = async function () { await auth.signOut(); this.currentUser = null; this.currentProfile = null; };
+  AuthManager.prototype.signOut = async function () { 
+    await auth.signOut(); 
+    this.currentUser = null; 
+    this.currentProfile = null; 
+  };
 
   // expose global
   window.authManager = new AuthManager();
   safeLog('auth.js initialized');
+
+  // 🔹 Add logout helper
+  window.logout = async function () {
+    try {
+      await window.authManager.signOut();
+      window.location.href = "index.html"; // redirect after logout
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
 })();
