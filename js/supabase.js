@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://unpkg.com/@supabase/supabase-js@2'
 
 // Replace with your actual Supabase project details
