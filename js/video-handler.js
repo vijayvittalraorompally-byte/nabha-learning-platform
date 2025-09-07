@@ -1,18 +1,15 @@
 // js/video-handler.js
-(() => {
+(function () {
   window.VideoHandler = {
     openVideo(id) {
-      if (!id) return;
-      location.href = videoplayer.html?id=${encodeURIComponent(id)};
-    },
-
-    async getVideoById(id) {
-      if (!id) throw new Error("missing id");
-      if (!window.db || !window.db.getVideo) {
-        throw new Error("window.db.getVideo not available");
+      if (!id) {
+        console.error('VideoHandler.openVideo called without id');
+        return;
       }
-      const res = await window.db.getVideo(id);
-      return res.data || res;
+      const url = video-player.html?id=${encodeURIComponent(id)};
+      console.log('VideoHandler: redirecting to', url);
+      location.href = url;
     }
   };
+  console.log('video-handler.js initialized');
 })();
