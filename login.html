@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -112,10 +113,14 @@
   <!-- Supabase client -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
+    // --- Configuration (replace with your keys if different) ---
     const SUPABASE_URL = 'https://vrmcjijthmfzlfqqhqvh.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybWNqaWp0aG1memxmcXFocXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDIzMDQsImV4cCI6MjA3MjcxODMwNH0.dnose_pvGlKlE4OO4NojCFiR0DATKoRYlFm4qbm_GpM'; // replace with your key
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybWNqaWp0aG1memxmcXFocXZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDIzMDQsImV4cCI6MjA3MjcxODMwNH0.dnose_pvGlKlE4OO4NojCFiR0DATKoRYlFm4qbm_GpM';
+
+    // Use the global supabase.createClient (safer than destructuring)
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // Elements
     const authForm = document.getElementById('authForm');
     const toggleLink = document.getElementById('toggleLink');
     const switchText = document.getElementById('switchText');
@@ -126,15 +131,24 @@
 
     let isSignUp = false;
 
-    function showLoading() { loadingDiv.style.display = 'block'; authForm.style.display = 'none'; }
-    function hideLoading() { loadingDiv.style.display = 'none'; authForm.style.display = 'block'; }
-    function showMessage(text, type='error') {
+    function showLoading() {
+      loadingDiv.style.display = 'block';
+      authForm.style.display = 'none';
+    }
+    function hideLoading() {
+      loadingDiv.style.display = 'none';
+      authForm.style.display = 'block';
+    }
+    function showMessage(text, type = 'error') {
       messageDiv.textContent = text;
-      messageDiv.className = 'message ' + (type==='success'?'success':'error');
+      messageDiv.className = 'message ' + (type === 'success' ? 'success' : 'error');
       messageDiv.style.display = 'block';
     }
-    function hideMessage() { messageDiv.style.display = 'none'; }
+    function hideMessage() {
+      messageDiv.style.display = 'none';
+    }
 
+    // Toggle between login/sign up
     toggleLink.addEventListener('click', () => {
       isSignUp = !isSignUp;
       if (isSignUp) {
@@ -142,6 +156,7 @@
         submitBtn.textContent = 'Sign Up';
         switchText.textContent = 'Already have an account?';
         toggleLink.textContent = ' Login';
+        // mark required
         document.getElementById('name').required = true;
         document.getElementById('role').required = true;
         document.getElementById('school_name').required = true;
@@ -166,74 +181,159 @@
       const password = document.getElementById('password').value;
 
       if (!email || !password) {
-        showMessage('Please provide email and password', 'error'); return;
+        showMessage('Please provide email and password', 'error');
+        return;
       }
       if (password.length < 6) {
-        showMessage('Password must be at least 6 characters', 'error'); return;
+        showMessage('Password must be at least 6 characters', 'error');
+        return;
+      }
+
+      // Signup-specific validation
+      let name, role, schoolName, gradeLevel;
+      if (isSignUp) {
+        name = document.getElementById('name').value.trim();
+        role = document.getElementById('role').value;
+        schoolName = document.getElementById('school_name').value.trim();
+        gradeLevel = document.getElementById('grade_level').value;
+
+        if (!name || !role || !schoolName) {
+          showMessage('Please fill in all required signup fields', 'error');
+          return;
+        }
+        if (role === 'student' && !gradeLevel) {
+          showMessage('Grade level is required for students', 'error');
+          return;
+        }
       }
 
       showLoading();
 
       try {
         if (isSignUp) {
-          const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
-          if (authError) throw authError;
+          // Sign up user
+          const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+            email,
+            password
+          });
 
-          const newUserId = authData?.user?.id;
+          if (authError) {
+            console.error('supabase auth.signUp error:', authError);
+            throw authError;
+          }
+          console.log('signUp response:', authData);
+
+          // Try to find a usable user id (might be present even if confirmation required)
+          const newUserId = authData?.user?.id || authData?.id;
           if (newUserId) {
+            // Prepare profile data (match your DB schema column names)
             const profileData = {
               id: newUserId,
               email,
-              full_name: document.getElementById('name').value.trim(),
-              role: document.getElementById('role').value,
-              school_name: document.getElementById('school_name').value.trim(),
-              grade_level: document.getElementById('grade_level').value || null
+              full_name: name,
+              role,
+              school_name: schoolName,
+              grade_level: gradeLevel ? parseInt(gradeLevel) : null
             };
-            await supabaseClient.from('profiles').upsert(profileData, { onConflict: 'id' });
-            showMessage('Registration successful! Redirecting...', 'success');
-            setTimeout(() => redirectToDashboard(newUserId), 1000);
+
+            // upsert into profiles (avoids duplicate key if trigger already created a profile)
+            const { error: insertError } = await supabaseClient
+              .from('profiles')
+              .upsert(profileData, { onConflict: 'id' });
+
+            if (insertError) {
+              console.error('profiles upsert error:', insertError);
+              throw new Error('Failed to save profile: ' + insertError.message);
+            }
+          } else {
+            console.warn('signUp returned no immediate user id (email confirm flow). authData:', authData);
+          }
+
+          showMessage('Registration successful! Please confirm your email (if required).', 'success');
+
+          // Redirect only if we have an id
+          if (newUserId) {
+            setTimeout(() => redirectToDashboard(newUserId), 1500);
           }
         } else {
-          const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
-          if (authError) throw authError;
+          // Login flow
+          const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password
+          });
+
+          if (authError) {
+            console.error('supabase signInWithPassword error:', authError);
+            throw authError;
+          }
+
+          console.log('signIn response:', authData);
           const userId = authData?.user?.id;
           showMessage('Login successful! Redirecting...', 'success');
-          if (userId) setTimeout(() => redirectToDashboard(userId), 800);
+
+          if (userId) {
+            setTimeout(() => redirectToDashboard(userId), 800);
+          } else {
+            console.warn('Login succeeded but no user id returned:', authData);
+            setTimeout(() => { window.location.href = 'dashboard.html'; }, 1000);
+          }
         }
       } catch (err) {
-        showMessage('Error: ' + (err.message || err), 'error');
+        console.error('Auth error caught:', err);
+        // err may be Error object or Supabase error object
+        const text = err?.message || JSON.stringify(err);
+        showMessage('Error: ' + text, 'error');
       } finally {
         hideLoading();
       }
     });
 
-    // Redirect based on role
+    // Redirect based on profile role
     async function redirectToDashboard(userId) {
       try {
-        const { data, error } = await supabaseClient.from('profiles').select('role').eq('id', userId).single();
-        if (error) throw error;
+        const { data, error } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile role:', error);
+          // fallback
+          window.location.href = 'dashboard.html';
+          return;
+        }
 
         if (data?.role === 'teacher') {
-          window.location.href = 'teacher-dashboard.html';
+          window.location.href = 'teacher_dashboard.html';
         } else if (data?.role === 'student') {
-          window.location.href = 'student-dashboard.html';
+          window.location.href = 'student_dashboard.html';
         } else {
           window.location.href = 'dashboard.html';
         }
       } catch (err) {
-        console.error('redirectToDashboard error:', err);
+        console.error('redirectToDashboard caught:', err);
         window.location.href = 'dashboard.html';
       }
     }
 
-    // Auto-redirect if already logged in
+    // On load, auto-redirect if already logged in
     window.addEventListener('load', async () => {
-      const { data: { user } } = await supabaseClient.auth.getUser();
-      if (user) {
-        showMessage('Already logged in, redirecting...', 'success');
-        setTimeout(() => redirectToDashboard(user.id), 800);
+      try {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user) {
+          showMessage('You are already logged in. Redirecting...', 'success');
+          setTimeout(() => redirectToDashboard(user.id), 800);
+        }
+      } catch (err) {
+        console.log('No active session or getUser error:', err);
       }
     });
+
+    // Helpful debug tip: if you see "Failed to fetch" in the console:
+    // 1) Open DevTools Network tab and inspect the failing request (status, response, CORS).
+    // 2) Temporarily unregister your Service Worker (Application → Service Workers) to rule out SW interference.
+    // 3) Disable browser extensions (adblock/privacy) that might block network calls.
   </script>
 </body>
 </html>
