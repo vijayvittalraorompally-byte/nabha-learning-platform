@@ -3,228 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Digital Learning Platform</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 1rem;
-        }
-        .login-container {
-            background: white;
-            padding: 2rem;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 400px;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-        input, select {
-            width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        .btn {
-            width: 100%;
-            padding: 1rem;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-        .toggle-link {
-            color: #667eea;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .message {
-            padding: 1rem;
-            margin-top: 1rem;
-            border-radius: 5px;
-            text-align: center;
-        }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        #signupFields { display: none; }
-    </style>
+    <title>Digital Learning - Nabha</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <meta name="theme-color" content="#2563eb">
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login / Register</h2>
+    <div class="container">
+        <header>
+            <h1 id="main-title">Digital Learning Platform</h1>
+            <div class="language-switch">
+                <button onclick="switchLanguage('en')">English</button>
+                <button onclick="switchLanguage('pa')">ਪੰਜਾਬੀ</button>
+            </div>
+        </header>
         
-        <form id="authForm">
-            <div class="form-group">
-                <label>Email:</label>
-                <input type="email" id="email" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Password:</label>
-                <input type="password" id="password" required>
-            </div>
-            
-            <div id="signupFields">
-                <div class="form-group">
-                    <label>Full Name:</label>
-                    <input type="text" id="name">
-                </div>
-                <div class="form-group">
-                    <label>Role:</label>
-                    <select id="role">
-                        <option value="student">Student</option>
-                        <option value="teacher">Teacher</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>School Name:</label>
-                    <input type="text" id="school_name">
-                </div>
-                <div class="form-group">
-                    <label>Grade Level:</label>
-                    <select id="grade_level">
-                        <option value="">Select Grade</option>
-                        <option value="6">Class 6</option>
-                        <option value="7">Class 7</option>
-                        <option value="8">Class 8</option>
-                        <option value="9">Class 9</option>
-                        <option value="10">Class 10</option>
-                    </select>
+        <main>
+            <div class="hero-section">
+                <h2 id="welcome-text">Welcome to Digital Learning</h2>
+                <p id="description">Learn digital skills offline. Perfect for rural schools.</p>
+                
+                <div class="cta-buttons">
+                    <button onclick="location.href='login.html'" class="btn primary" id="login-btn">
+                        Login / Register
+                    </button>
+                    <button onclick="installPWA()" class="btn secondary" id="install-btn">
+                        Install App
+                    </button>
                 </div>
             </div>
             
-            <button type="submit" class="btn" id="submitBtn">Login</button>
-        </form>
-        
-        <p style="text-align: center; margin-top: 1rem;">
-            <span id="switchText">Don't have an account?</span>
-            <span class="toggle-link" onclick="toggleMode()">Sign Up</span>
-        </p>
-        
-        <div id="message" style="display: none;"></div>
+            <div class="features">
+                <div class="feature-card">
+                    <h3 id="offline-title">📱 Works Offline</h3>
+                    <p id="offline-desc">Access content without internet</p>
+                </div>
+                <div class="feature-card">
+                    <h3 id="local-lang-title">🌐 Local Language</h3>
+                    <p id="local-lang-desc">Content in Punjabi and English</p>
+                </div>
+                <div class="feature-card">
+                    <h3 id="progress-title">📊 Track Progress</h3>
+                    <p id="progress-desc">Monitor learning progress</p>
+                </div>
+            </div>
+        </main>
     </div>
-
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    
+    <script src="js/app.js"></script>
     <script>
-        const SUPABASE_URL = 'https://cooggqcwbgngqcaypbky.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvb2dncWN3YmduZ3FjYXlwYmt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMDYwNjAsImV4cCI6MjA3MjU4MjA2MH0.aJAOPyV6JqpfjqlQvL6okQTpu9VuC7jixGNVJ1AABHg';
+        // PWA Installation
+        let deferredPrompt;
         
-        const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
-        let isSignUp = false;
-        
-        function toggleMode() {
-            isSignUp = !isSignUp;
-            const signupFields = document.getElementById('signupFields');
-            const submitBtn = document.getElementById('submitBtn');
-            const switchText = document.getElementById('switchText');
-            
-            if (isSignUp) {
-                signupFields.style.display = 'block';
-                submitBtn.textContent = 'Sign Up';
-                switchText.textContent = 'Already have an account?';
-            } else {
-                signupFields.style.display = 'none';
-                submitBtn.textContent = 'Login';
-                switchText.textContent = "Don't have an account?";
-            }
-        }
-        
-        document.getElementById('authForm').addEventListener('submit', async function(e) {
+        window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            try {
-                if (isSignUp) {
-                    const { data, error } = await supabaseClient.auth.signUp({
-                        email: email,
-                        password: password,
-                    });
-                    
-                    if (error) throw error;
-                    
-                    if (data.user) {
-                        const { error: insertError } = await supabaseClient.from('users').insert({
-                            id: data.user.id,
-                            email: email,
-                            name: document.getElementById('name').value,
-                            role: document.getElementById('role').value,
-                            school_name: document.getElementById('school_name').value,
-                            grade_level: document.getElementById('grade_level').value || null
-                        });
-                        
-                        if (insertError) throw insertError;
-
-                        showMessage('Registration successful! Redirecting...', 'success');
-                        
-                        // New redirect logic after successful signup and data insertion
-                        await redirectToDashboard(data.user.id);
-                    }
-                } else {
-                    const { data, error } = await supabaseClient.auth.signInWithPassword({
-                        email: email,
-                        password: password,
-                    });
-                    
-                    if (error) throw error;
-                    
-                    // New redirect logic after successful login
-                    await redirectToDashboard(data.user.id);
-                }
-            } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
-            }
+            deferredPrompt = e;
+            document.getElementById('install-btn').style.display = 'block';
         });
         
-        async function redirectToDashboard(userId) {
-            const { data, error } = await supabaseClient
-                .from('users')
-                .select('role')
-                .eq('id', userId)
-                .single();
-            
-            if (error) {
-                console.error("Error fetching user role:", error);
-                // Fallback if no role is found
-                window.location.href = 'dashboard.html';
-                return;
-            }
-            
-            if (data && data.role) {
-                if (data.role === 'student') {
-                    window.location.href = 'student_dashboard.html';
-                } else if (data.role === 'teacher') {
-                    window.location.href = 'teacher_dashboard.html';
-                } else {
-                    window.location.href = 'dashboard.html';
-                }
-            } else {
-                window.location.href = 'dashboard.html';
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt = null;
+                });
             }
         }
-
-        function showMessage(text, type) {
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = text;
-            messageDiv.className = 'message ' + type;
-            messageDiv.style.display = 'block';
+        
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
         }
     </script>
 </body>
